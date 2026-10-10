@@ -1,0 +1,197 @@
+# The linkmo copier template: a command line, an HTTP API and tests over a LinkML schema
+# and its data. Apply it to the root of a host project, beside the .linkml/ sidecar that
+# linkml-project-copier made. It records its answers in .copier-answers.linkmo.yml, reads
+# its defaults from the sidecar's answers, and writes nothing under .linkml/.
+#
+# Settings: https://copier.readthedocs.io/en/stable/configuring/
+
+# === Questions ===
+
+sidecar_answers_file:
+  type: str
+  help: |
+    Where are the LinkML sidecar's copier answers, relative to the host root?
+    The next questions take their defaults from that file when it exists.
+  default: .linkml/.copier-answers.yml
+
+sidecar_dir:
+  type: str
+  default: "{{ sidecar_answers_file | dirname }}"
+  when: false
+
+project_slug:
+  type: str
+  help: The schema's slug, which names its schema file and its datamodel module
+  default: >-
+    {{ _external_data.sidecar.project_slug
+       | default(_copier_conf.dst_path | string | basename | lower
+                 | regex_replace('[^a-z0-9]+', '_') | regex_replace('^[^a-z]+|_+$', ''), true) }}
+  validator: >-
+    {% if not (project_slug | regex_search('^[a-z][-_a-z0-9]+$', ignorecase=False)) %}
+    Start with a lowercase letter, then lowercase letters, digits, '-' or '_'.
+    {% endif %}
+
+linkmo_dir:
+  type: str
+  help: The folder at the host root that will hold the generated project
+  default: "{{ project_slug | replace('_', '-') }}-linkmo"
+  validator: >-
+    {% if not (linkmo_dir | regex_search('^[A-Za-z0-9][A-Za-z0-9._-]*$', ignorecase=False)) %}
+    One folder name: letters, digits, '.', '_' or '-', starting with a letter or digit.
+    {% elif linkmo_dir == sidecar_dir %}
+    The project cannot share the sidecar's folder.
+    {% endif %}
+
+schema_path:
+  type: str
+  help: |
+    Where is the LinkML schema? Give a path from the host root, or
+    pkg:<package>/<path> for a schema shipped inside an installed package.
+  default: >-
+    {%- if _external_data.sidecar.project_slug is defined -%}
+    {{ (sidecar_dir ~ '/') if sidecar_dir else '' }}src/{{ project_slug }}/schema/{{ project_slug }}.yaml
+    {%- else -%}
+    schema/{{ project_slug }}.yaml
+    {%- endif -%}
+
+datamodel_module:
+  type: str
+  help: |
+    Which Python module did gen-pydantic make from the schema? The default is the
+    sidecar's own output, which the copy step generates when it is missing.
+  default: "{{ project_slug }}.datamodel.{{ project_slug }}_pydantic"
+  validator: >-
+    {% if not (datamodel_module | regex_search('^[A-Za-z_][A-Za-z0-9_]*([.][A-Za-z_][A-Za-z0-9_]*)*$')) %}
+    A dotted Python module path, such as my_schema.datamodel.my_schema_pydantic.
+    {% endif %}
+
+root_class:
+  type: str
+  help: |
+    Which class does a data file hold? Its collection slots decide which classes are
+    exposed until the exposure file names them. Leave it empty for the class the
+    schema marks tree_root.
+  default: ""
+
+exposure_file:
+  type: str
+  help: The exposure file, inside the project folder, that names the exposed classes and the hand-written operations
+  default: exposure.yaml
+  validator: >-
+    {% if '/' in exposure_file or not exposure_file.endswith(('.yaml', '.yml')) %}
+    A YAML file name inside the project folder, such as exposure.yaml.
+    {% endif %}
+
+data_source:
+  type: str
+  help: Where do the records come from?
+  choices:
+    A directory of YAML instance files, read through the datamodel: yaml
+    A Python object with query(class_name, **filters): python
+  default: yaml
+
+data_path:
+  type: str
+  help: The directory of YAML instance files, as a path from the host root or pkg:<package>/<path>
+  default: data
+  when: "{{ data_source == 'yaml' }}"
+
+data_object:
+  type: str
+  help: |
+    The object, as module:attribute. A class or a function found there is called once,
+    with no arguments, to make the object.
+  default: ""
+  when: "{{ data_source == 'python' }}"
+  validator: >-
+    {% if data_source == 'python' and not (data_object | regex_search('^[A-Za-z_][A-Za-z0-9_.]*:[A-Za-z_][A-Za-z0-9_]*$')) %}
+    Give the object as module:attribute, such as my_package.data:store.
+    {% endif %}
+
+cli_framework:
+  type: str
+  help: Which command-line framework? Only click exists in this version.
+  choices:
+    - click
+  default: click
+
+api:
+  type: str
+  help: Which web framework? Only fastapi exists in this version.
+  choices:
+    - fastapi
+  default: fastapi
+
+command_name:
+  type: str
+  help: The name of the command line
+  default: "{{ project_slug | replace('_', '-') }}"
+  validator: >-
+    {% if not (command_name | regex_search('^[A-Za-z][A-Za-z0-9._-]*$', ignorecase=False)) %}
+    Start with a letter, then letters, digits, '.', '_' or '-'.
+    {% endif %}
+
+python_package:
+  type: str
+  help: The Python package that will hold the generated code
+  default: "{{ project_slug | replace('-', '_') }}_linkmo"
+  validator: >-
+    {% if not (python_package | regex_search('^[a-z_][a-z0-9_]*$', ignorecase=False)) %}
+    A Python package name: lowercase letters, digits and '_'.
+    {% elif python_package == project_slug %}
+    Use a name other than the schema's slug, which the sidecar's package already has.
+    {% endif %}
+
+env_prefix:
+  type: str
+  default: "{{ python_package | upper }}"
+  when: false
+
+# === Settings ===
+
+_subdirectory: template
+_min_copier_version: "9.4.0"
+
+# A separate answers file, so that this template and linkml-project-copier are updated
+# separately: `copier update -a .copier-answers.linkmo.yml --trust` from the host root.
+_answers_file: .copier-answers.linkmo.yml
+
+# The sidecar's answers, read from the host root. Only the question defaults above use
+# them, so that the answers recorded here are what every later render reads.
+_external_data:
+  sidecar: "{{ sidecar_answers_file }}"
+
+# Files the project owns once they exist: copier creates them, then leaves them alone.
+_skip_if_exists:
+  - "{{ linkmo_dir }}/README.md"
+  - "{{ linkmo_dir }}/{{ exposure_file }}"
+  - "{{ linkmo_dir }}/project.justfile"
+  - "{{ linkmo_dir }}/src/{{ python_package }}/hand.py"
+  - "{{ linkmo_dir }}/tests/expected_counts.yaml"
+  - "{{ linkmo_dir }}/tests/test_hand.py"
+
+# Copier runs tasks during an update too, inside its temporary renders, so the one task
+# is limited to the first copy. It generates the datamodel only when the module points
+# into the sidecar and the file is missing, and it never installs anything.
+_tasks:
+  - command:
+      - "{{ _copier_python }}"
+      - "{{ linkmo_dir }}/scripts/gen_datamodel.py"
+      - "--if-missing"
+    when: "{{ _copier_operation == 'copy' }}"
+
+_message_after_copy: |
+
+  The project is in {{ linkmo_dir }}/. From the host root:
+
+    just --justfile {{ linkmo_dir }}/justfile install   # uv sync, once
+    just --justfile {{ linkmo_dir }}/justfile test
+    just --justfile {{ linkmo_dir }}/justfile cli --help
+    just --justfile {{ linkmo_dir }}/justfile serve
+
+  {{ linkmo_dir }}/{{ exposure_file }} says which classes are exposed; until it names
+  them, every class the root class collects is. Fill in
+  {{ linkmo_dir }}/tests/expected_counts.yaml as your data settles.
+
+  Update this template on its own, from the host root:
+    copier update -a {{ _copier_conf.answers_file }} --trust
