@@ -1,0 +1,24 @@
+# The template's own test configuration. The template itself is copier.yaml and template/;
+# this file only tells pytest how to run tests/, which render the template and run the
+# project it generates. See CONTRIBUTING.md for the environment the tests expect.
+[project]
+name = "linkmo-project-copier"
+version = "0.0.0"
+description = "A copier template that turns a LinkML schema and its data into a command line, an HTTP API and tests"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "copier>=9.4.0",
+    "jinja2-time>=0.2.0",
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--tb=short"]
+markers = [
+    "slow: renders several hosts and runs copier update; deselect with -m 'not slow'",
+]
