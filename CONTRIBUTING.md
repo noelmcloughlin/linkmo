@@ -1,6 +1,6 @@
 # Contributing
 
-A checklist; the reasons live in the code's comments and docstrings.
+This page is a checklist for work on the template. The code's comments and docstrings give the reasons.
 
 - Run the tests before a pull request. They render the template beside a sidecar made by linkml-project-copier, then run the generated project with a Python that has its packages:
 
@@ -10,11 +10,11 @@ A checklist; the reasons live in the code's comments and docstrings.
   uv run --group dev pytest
   ```
 
-  Without `LINKMO_TEST_PYTHON` the tests that run the project are skipped; without `LINKML_PROJECT_COPIER` the sidecar is rendered from GitHub.
+  Without `LINKMO_TEST_PYTHON` the tests that run the project are skipped. Without `LINKML_PROJECT_COPIER` the sidecar is rendered from GitHub.
 
-- A generated file belongs to the template unless `_skip_if_exists` in `copier.yaml` lists it. Keep that list and the README's "What is yours" in step.
+- A generated file belongs to the template unless `_skip_if_exists` in `copier.yaml` lists it. Keep that list and the README's "What is yours" in agreement.
 
-- Files that need answers end in `.jinja`. The justfile is copied as it is, so its own `{{ }}` stay, and it reads the package name from `linkmo.env`.
+- Files that need answers end in `.jinja`. Copier copies the justfile as it is, so its own `{{ }}` stay. The justfile reads the package name from `linkmo.env`.
 
 - Generated code reads the schema through `exposure.py` and `schema.py`, never by class or slot name.
 
