@@ -1,0 +1,156 @@
+# The main data file: an instance of Registry, the schema's tree_root class.
+animals:
+  - id: rex
+    type: Dog
+    name: Rex
+    species: dog
+    breed: labrador
+    status: available
+    age_in_years: 3
+    weight_kg: 31.5
+    vaccinated: true
+    arrived_on: "2026-03-02"
+    favourite_toys: [ball, rope]
+    friends: [whiskers, biscuit]
+  - id: biscuit
+    type: Dog
+    name: Biscuit
+    species: dog
+    breed: beagle
+    status: adopted
+    age_in_years: 5
+    vaccinated: true
+    favourite_toys: [ball]
+    friends: [rex]
+  - id: luna
+    type: Dog
+    name: Luna
+    species: dog
+    breed: husky
+    status: available
+    age_in_years: 2
+    vaccinated: false
+  - id: max
+    type: Dog
+    name: Max
+    species: dog
+    breed: collie
+    status: reserved
+    age_in_years: 7
+    vaccinated: true
+    friends: [rex]
+  - id: bella
+    type: Dog
+    name: Bella
+    species: dog
+    breed: poodle
+    status: available
+    age_in_years: 1
+    vaccinated: false
+    favourite_toys: [squeaky duck]
+  - id: duke
+    type: Dog
+    name: Duke
+    species: dog
+    breed: boxer
+    status: adopted
+    age_in_years: 4
+    vaccinated: true
+  - id: whiskers
+    type: Cat
+    name: Whiskers
+    species: cat
+    status: available
+    age_in_years: 2
+    vaccinated: true
+    indoor: true
+    friends: [rex]
+  - id: mittens
+    type: Cat
+    name: Mittens
+    species: cat
+    status: adopted
+    age_in_years: 6
+    vaccinated: false
+    indoor: false
+  - id: shadow
+    type: Cat
+    name: Shadow
+    species: cat
+    status: available
+    age_in_years: 9
+    vaccinated: true
+    indoor: true
+    favourite_toys: [feather wand]
+  - id: cleo
+    type: Cat
+    name: Cleo
+    species: cat
+    status: reserved
+    age_in_years: 3
+    vaccinated: true
+    indoor: true
+  - id: tiger
+    type: Cat
+    name: Tiger
+    species: cat
+    status: available
+    age_in_years: 1
+    vaccinated: false
+    indoor: false
+  - id: thumper
+    name: Thumper
+    species: rabbit
+    status: available
+    age_in_years: 2
+    vaccinated: true
+  - id: clover
+    name: Clover
+    species: rabbit
+    status: available
+    age_in_years: 1
+    vaccinated: false
+  - id: pip
+    name: Pip
+    species: guinea_pig
+    status: adopted
+    age_in_years: 1
+    vaccinated: false
+  - id: daisy
+    name: Daisy
+    species: rabbit
+    status: reserved
+    age_in_years: 4
+    vaccinated: true
+people:
+  - id: aoife
+    name: Aoife
+    email: aoife@example.org
+    adopted: [biscuit, mittens]
+  - id: brian
+    name: Brian
+    adopted: [duke]
+  - id: ciara
+    name: Ciara
+    adopted: [pip]
+  - id: dara
+    name: Dara
+  - id: eimear
+    name: Eimear
+    email: eimear@example.org
+shelters:
+  - id: galway-paws
+    name: Galway Paws
+    city: Galway
+    region: IE-G
+    houses: [rex, luna, max, whiskers, shadow]
+  - id: cork-tails
+    name: Cork Tails
+    city: Cork
+    region: IE-CO
+    houses: [bella, cleo, tiger, thumper]
+  - id: dublin-den
+    name: Dublin Den
+    city: Dublin
+    region: IE-D
+    houses: [clover, daisy]

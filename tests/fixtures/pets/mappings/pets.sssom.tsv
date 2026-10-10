@@ -1,0 +1,10 @@
+# curie_map:
+#   pets: https://example.org/pets/
+#   semapv: https://w3id.org/semapv/vocab/
+#   skos: http://www.w3.org/2004/02/skos/core#
+#   wd: http://www.wikidata.org/entity/
+# license: https://creativecommons.org/publicdomain/zero/1.0/
+# mapping_set_id: https://example.org/pets/mappings/pets.sssom.tsv
+subject_id	subject_label	predicate_id	object_id	object_label	mapping_justification
+pets:Dog	Dog	skos:exactMatch	wd:Q144	dog	semapv:ManualMappingCuration
+pets:Cat	Cat	skos:exactMatch	wd:Q146	cat	semapv:ManualMappingCuration

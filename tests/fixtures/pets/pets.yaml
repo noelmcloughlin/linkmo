@@ -1,0 +1,164 @@
+id: https://example.org/pets
+name: pets
+title: Pets
+description: A small schema of animals, the people who adopt them and the shelters that house them.
+license: MIT
+prefixes:
+  linkml: https://w3id.org/linkml/
+  pets: https://example.org/pets/
+default_prefix: pets
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  NamedThing:
+    abstract: true
+    description: Anything with an identifier and a name.
+    slots:
+      - id
+      - name
+      - description
+
+  Animal:
+    is_a: NamedThing
+    description: An animal in the care of a shelter or a person.
+    slots:
+      - type
+      - species
+      - status
+      - age_in_years
+      - weight_kg
+      - vaccinated
+      - arrived_on
+      - favourite_toys
+      - friends
+
+  Dog:
+    is_a: Animal
+    description: A dog.
+    slots:
+      - breed
+
+  Cat:
+    is_a: Animal
+    description: A cat.
+    slots:
+      - indoor
+
+  Person:
+    is_a: NamedThing
+    description: Someone who adopts animals.
+    slots:
+      - email
+      - adopted
+
+  Shelter:
+    is_a: NamedThing
+    description: A place that houses animals until they are adopted.
+    slots:
+      - city
+      - region
+      - houses
+
+  Registry:
+    tree_root: true
+    description: The container a data file holds.
+    slots:
+      - animals
+      - people
+      - shelters
+
+slots:
+  id:
+    identifier: true
+    range: string
+    description: The record's identifier.
+  name:
+    description: A human-readable name.
+  description:
+    description: A sentence or two about the record.
+  type:
+    designates_type: true
+    range: string
+    description: The class of the record.
+  species:
+    range: Species
+    description: The kind of animal.
+  status:
+    range: AdoptionStatus
+    description: Where the animal stands in the adoption process.
+  age_in_years:
+    range: integer
+    description: Age in whole years.
+  weight_kg:
+    range: float
+    description: Weight in kilograms.
+  vaccinated:
+    range: boolean
+    description: True when the animal's vaccinations are up to date.
+  arrived_on:
+    range: date
+    description: The day the animal arrived.
+  favourite_toys:
+    multivalued: true
+    description: The toys the animal likes best.
+  friends:
+    range: Animal
+    multivalued: true
+    inlined: false
+    description: Other animals this one gets on with.
+  breed:
+    description: The dog's breed.
+  indoor:
+    range: boolean
+    description: True for an indoor cat.
+  email:
+    description: An email address.
+  adopted:
+    range: Animal
+    multivalued: true
+    inlined: false
+    description: The animals this person has adopted.
+  city:
+    description: The city the shelter is in.
+  region:
+    range: Region
+    description: The region the shelter is in.
+  houses:
+    range: Animal
+    multivalued: true
+    inlined: false
+    description: The animals the shelter houses.
+  animals:
+    range: Animal
+    multivalued: true
+    inlined_as_list: true
+    description: Every animal in the file.
+  people:
+    range: Person
+    multivalued: true
+    inlined_as_list: true
+    description: Every person in the file.
+  shelters:
+    range: Shelter
+    multivalued: true
+    inlined_as_list: true
+    description: Every shelter in the file.
+
+enums:
+  Species:
+    description: The kinds of animal the registry knows.
+    permissible_values:
+      dog:
+      cat:
+      rabbit:
+      guinea_pig:
+  AdoptionStatus:
+    description: Where an animal stands in the adoption process.
+    permissible_values:
+      available:
+      reserved:
+      adopted:
+  Region:
+    description: A region code. The schema lists no values, so any string is accepted.

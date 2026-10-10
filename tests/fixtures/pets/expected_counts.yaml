@@ -1,0 +1,40 @@
+# The pets project's count table, as the project would fill it in. Smaug's species is not
+# in the Species enum, so the datamodel rejects that record and every Animal listing
+# reports one validation error.
+cases:
+  - args: [animal]
+    count: 15
+    validation_errors: 1
+  - args: [dog]
+    count: 6
+    validation_errors: 0
+  - args: [cat]
+    count: 5
+  - args: [animal, --species, rabbit]
+    count: 3
+  - args: [animal, --status, available]
+    count: 8
+  - args: [animal, --vaccinated]
+    count: 9
+  - args: [animal, --no-vaccinated]
+    count: 6
+  - args: [animal, --friends, rex]
+    count: 3
+  - args: [animal, --favourite_toys, frisbee]
+    count: 1
+  - args: [animal, --age_in_years, 1]
+    count: 4
+  - args: [animal, --type, Cat]
+    count: 5
+  - args: [cat, --indoor]
+    count: 3
+  - args: [dog, rex]
+    count: 1
+  - args: [dog, whiskers]
+    count: 0
+  - args: [person, --adopted, biscuit]
+    count: 1
+  - args: [shelter]
+    count: 4
+  - args: [shelter, --region, IE-L]
+    count: 1

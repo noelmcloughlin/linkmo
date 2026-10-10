@@ -1,0 +1,8 @@
+# A second file. Rex appears again with one more toy, the way a mapping file adds to a
+# record another file defines, and Smaug is a record the datamodel must reject.
+animals:
+  - id: rex
+    favourite_toys: [frisbee]
+  - id: smaug
+    name: Smaug
+    species: dragon
