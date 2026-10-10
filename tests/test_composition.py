@@ -1,6 +1,6 @@
 """Two templates in one host: linkml-project-copier in .linkml/ and linkmo at the root.
 
-Copier has no template inheritance; several templates share a project through separate
+Copier has no template inheritance. Several templates share a project through separate
 answers files, and each is updated on its own. These tests record what copier 9 does when
 both templates' `copier update` run in one host and both declare `_migrations`. Each
 template gets a new tagged version with one migration that writes a line to a log.

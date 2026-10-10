@@ -1,4 +1,4 @@
-"""The generated project runs: its own tests pass, and its two doors answer alike.
+"""The generated project runs: its own tests pass, and its command line and API answer alike.
 
 These tests run the project with LINKMO_TEST_PYTHON, the way its own `just test` would
 with uv, and are skipped without it.
@@ -44,7 +44,8 @@ def test_the_generated_tests_pass(pets_project):
     result = h.run_just(pets_project, "test", "-q", "-p", "no:cacheprovider")
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-2000:]
     cases = len(h.yaml.safe_load((h.PETS / "expected_counts.yaml").read_text(encoding="utf-8"))["cases"])
-    # Each case runs once for its count and once for the identity of the two doors.
+    # Each case runs once for its count, and once to check that the command line and the API
+    # agree.
     assert _passed(result.stdout) >= 2 * cases
     assert " skipped" not in result.stdout.splitlines()[-1]
 

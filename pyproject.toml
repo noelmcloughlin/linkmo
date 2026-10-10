@@ -1,5 +1,5 @@
-# The template's own test configuration. The template itself is copier.yaml and template/;
-# this file only tells pytest how to run tests/, which render the template and run the
+# The template's own test configuration. The template itself is copier.yaml and template/.
+# This file only tells pytest how to run tests/, which render the template and run the
 # project it generates. See CONTRIBUTING.md for the environment the tests expect.
 [project]
 name = "linkmo-project-copier"

@@ -111,7 +111,7 @@ def test_the_project_files(pets_host):
                  "scripts/gen_datamodel.py", "scripts/export_openapi.py", "scripts/gen_ui_config.py",
                  "tests/expected_counts.yaml", "tests/test_cli_api_identity.py", "tests/test_counts.py"):
         assert (project / name).is_file(), name
-    # The justfile is copied as it is, so its own {{ }} survive.
+    # The justfile is copied as it is, so its own {{ }} stay.
     assert "{{ python }} -m pytest" in (project / "justfile").read_text(encoding="utf-8")
     assert "LINKMO_PACKAGE=pets_linkmo" in (project / "linkmo.env").read_text(encoding="utf-8")
     settings = (package / "settings.py").read_text(encoding="utf-8")
