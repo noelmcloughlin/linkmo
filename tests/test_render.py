@@ -11,13 +11,15 @@ from copier.errors import MissingFileWarning
 from tests import helpers as h
 
 
-def test_the_answers_file_sits_at_the_host_root_beside_the_sidecars(pets_host):
+def test_the_answers_file_sits_at_the_host_root_beside_the_sidecars(pets_host, sidecar_template):
     host, _ = pets_host
     linkmo = h.answers(host)
     sidecar = h.answers(host, ".linkml/.copier-answers.yml")
     assert linkmo["_src_path"] and linkmo["_commit"]
     assert linkmo["sidecar_answers_file"] == ".linkml/.copier-answers.yml"
-    assert sidecar["_commit"] and "linkmo" not in str(sidecar["_src_path"])
+    # Each answers file names its own template, so the two updates never mix them up.
+    assert sidecar["_commit"] and sidecar["_src_path"] == str(sidecar_template)
+    assert linkmo["_src_path"] != sidecar["_src_path"]
 
 
 def test_external_data_reads_the_sidecar_answers_from_the_host_root(pets_host):
