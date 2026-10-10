@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ linkmo_dir }}"
+version = "0.1.0"
+description = "A command line and an HTTP API over the {{ project_slug }} schema and its data"
+readme = "README.md"
+requires-python = ">=3.11"
+# linkml, the package of generators, is left out on purpose. The kernels need only
+# linkml-runtime, and gen-pydantic runs in the LinkML sidecar's own environment. linkml
+# 1.12.0 requires pyshexc>=0.10.3, whose only release, 0.10.3.post1, requires
+# chardet>=7.4.1, so it cannot sit beside a package that pins chardet==5.2.0, as
+# ai-atlas-nexus 1.2.5 does. Without it, such a data source stays installable.
+dependencies = [
+    "click>=8.2",
+    "fastapi>=0.124",
+    "uvicorn>=0.30",
+    "linkml-runtime>=1.10,<2",
+    "pydantic>=2.11,<3",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+{{ command_name }} = "{{ python_package }}.cli:main"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.27",
+    "pytest>=8.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ python_package }}"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = ["--strict-markers", "--tb=short"]
+filterwarnings = ["ignore::DeprecationWarning"]
