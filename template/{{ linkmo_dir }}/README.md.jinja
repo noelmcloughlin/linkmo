@@ -15,7 +15,7 @@ just --justfile {{ linkmo_dir }}/justfile serve            # the API on http://l
 just --justfile {{ linkmo_dir }}/justfile test
 ```
 
-Inside this folder, plain `just <recipe>` works, and after `just install` so does `uv run {{ command_name }} --help`.
+Inside this folder, plain `just <recipe>` works, and after `just install` so does `uv run {{ command_name }} --help`. `just --list` shows the rest: the published contract, a web UI's entity list, the SSSOM check, the Datasette browse database and the schema's pages with examples.
 
 A command lists the records of its class. Give an identifier to fetch one record, any option to filter, `--count` for the number only, and `--mode api` to ask a running server instead of reading the data in the process. The API answers `GET /<class>` with the same parameters and the same JSON, and publishes its contract at `/openapi.json`.
 
