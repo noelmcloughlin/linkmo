@@ -12,7 +12,7 @@ python := env("LINKMO_PYTHON", "uv run python")
 sssom := env("LINKMO_SSSOM", "uvx --from sssom sssom")
 package := env("LINKMO_PACKAGE")
 host_root := ".."
-# The browse and docs steps need linkml beside the project; uv installs the browse and docs
+# The browse and docs steps need linkml beside the project. uv installs the browse and docs
 # dependency groups on first use.
 browse_python := env("LINKMO_BROWSE_PYTHON", env("LINKMO_PYTHON", "uv run --group browse python"))
 datasette := env("LINKMO_DATASETTE", "uv run --group browse datasette")

@@ -1,11 +1,11 @@
-"""Generate the sidecar's Python datamodel when the project's datamodel lives there.
+"""Generate the sidecar's Python datamodel when the project's datamodel is there.
 
 The linkmo template runs this once, at the end of its first copy, with --if-missing. When
 `{{ datamodel_module }}` points into the sidecar's src/, it writes what the sidecar's own
 `just gen-python` writes: the pydantic module the project imports, and the dataclasses
 module that the sidecar's datamodel package imports beside it. With --if-missing it
 writes only the files that do not exist. It never installs anything, and it changes
-nothing when the datamodel lives in an installed package.
+nothing when the datamodel is in an installed package.
 
 The generators, gen-pydantic and gen-python from the linkml package, are looked for in:
 

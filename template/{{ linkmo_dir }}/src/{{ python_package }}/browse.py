@@ -16,7 +16,7 @@ parent of the record's own class. So each record is written to its class table a
 table of every ancestor that shares its identifier, and each multivalued slot to the link
 table of each of those classes. Every table then holds the whole extent of its class, and a
 reference resolves whichever class its range names. The link tables that stay empty are
-dropped once the rows are in; every class table stays, so every foreign key keeps its parent.
+dropped once the rows are in. Every class table stays, so every foreign key keeps its parent.
 
 The database is a build artefact. ``just build-browse`` writes it under ``browse/`` with
 ``metadata.yaml`` beside it, and ``just browse`` serves that folder with Datasette. Building
@@ -186,7 +186,7 @@ def table_plan(view: SchemaView, tables: dict[str, list[str]], table: str, key: 
 
     A slot keeps its name, or its alias, as a column. An inlined reference becomes a column
     named after the slot and the range's identifier. A multivalued slot becomes the table
-    ``<class>_<singular name>``. A list of inlined objects matches none of these; it is left
+    ``<class>_<singular name>``. A list of inlined objects matches none of these. It is left
     out, and its values are counted as unplaced.
     """
     classes = view.all_classes()
@@ -368,7 +368,7 @@ def save(connection: sqlite3.Connection, path: Path) -> None:
     connection.execute("vacuum into ?", (str(path),))
 
 
-# Datasette metadata. The keys are those Datasette 0.65 reads from its metadata file;
+# Datasette metadata. The keys are those Datasette 0.65 reads from its metadata file.
 # Datasette 1.0 reads the table settings from datasette.yaml instead.
 
 

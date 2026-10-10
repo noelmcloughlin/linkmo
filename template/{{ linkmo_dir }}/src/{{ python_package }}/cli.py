@@ -34,9 +34,9 @@ __all__ = ["SHARED_OPTION_NAMES", "build_cli", "main"]
 DEFAULT_MODE = os.environ.get(f"{settings.ENV_PREFIX}_MODE", "local")
 DEFAULT_TIMEOUT = 30.0
 
-# The options every command takes beside its filters. They steer the command line itself
+# The options every command takes beside its filters. They control the command line itself
 # and never reach a handler or the server. They sit on the group as well, so both
-# `cmd --count dog` and `cmd dog --count` work; the command's own value wins.
+# `cmd --count dog` and `cmd dog --count` work. The command's own value wins.
 SHARED_OPTION_NAMES = ("mode", "timeout", "count", "pretty")
 
 # Hosts the API URL may name without an explicit opt-in. Any other host needs
@@ -155,7 +155,7 @@ def _option(parameter: Parameter, required: bool = False) -> click.Option:
     }
     declarations = [f"--{parameter.name}", parameter.python_name]
     if parameter.kind == "boolean":
-        # A flag with an off switch, so that not giving it filters nothing.
+        # A flag with a negative form, so that leaving it out filters nothing.
         declarations = [f"--{parameter.name}/--no-{parameter.name}", parameter.python_name]
         kwargs["default"] = None
     elif parameter.choices:

@@ -1,7 +1,7 @@
-"""The one handler behind every class listing, and the serialisation both doors share.
+"""The one handler behind every class listing, and the serialisation both kernels share.
 
 The API kernel routes each class listing here, and the command line calls it directly in
-local mode, so the two doors give the same answer by construction. A listing is the
+local mode, so both kernels give the same answer by construction. A listing is the
 envelope ``{"items", "count", "validation_errors"}``. Giving the identifier of the class
 returns ``{"item": record}`` instead, with ``null`` when no record has it, unless a
 parameter the exposure file adds is given too: then the question is the data source's

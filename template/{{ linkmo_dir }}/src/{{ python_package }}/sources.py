@@ -6,14 +6,14 @@ the slot equals the value or, for a multivalued slot, when its list holds the va
 
 ``YamlDirectory`` reads every ``.yaml``, ``.yml`` and ``.json`` file under a directory once.
 A file whose name starts with a class name and a dash, as in ``Person-001.yaml``, holds
-records of that class; any other file holds an instance of the root class, whose
+records of that class. Any other file holds an instance of the root class, whose
 collection slots hold the records. Records that share an identifier, such as a record and
 the mapping rows another file adds to it, are merged before they are validated: a list
 gains the values it lacks, any other value is replaced. Each record is then built with
-the model of its own class, named by its designator slot when it has one, else the first
-of the slot's range and its subclasses that accepts it, which is the choice pydantic makes
-for a union of them. A record no model accepts is left out and its error is kept for the
-listing's ``validation_errors``.
+the model of its own class. The record's designator slot names that class when it has
+one. Otherwise the model is the first of the slot's range and its subclasses that accepts
+the record, which is the choice pydantic makes for a union of them. A record no model
+accepts is left out and its error is kept for the listing's ``validation_errors``.
 
 ``ObjectSource`` wraps any object with a ``query(class_name, **filters)`` method and
 passes the question on unchanged, including the parameters the exposure file adds.

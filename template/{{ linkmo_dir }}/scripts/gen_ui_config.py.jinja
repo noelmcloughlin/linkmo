@@ -1,7 +1,7 @@
 """Write the entity list a web UI is built from.
 
 A web UI needs the classes the API exposes, under the same keys, so that a menu entry and
-an API route never drift apart. This script derives the list from the exposure file and
+an API route always agree. This script derives the list from the exposure file and
 the schema, through the same reader the two kernels use, and writes it as JSON. A UI can
 merge its own overlay over it for what the schema cannot know, such as menu groups.
 
@@ -9,8 +9,8 @@ Each entry carries a default filter list and a prominent field list, derived fro
 class's slots that point at another class or an enum. They are a fallback for a class
 the UI's overlay does not mention, not a judgement about the best filters.
 
-Run it with `just gen-ui-config`; tests/test_published.py fails when the committed file
-falls behind the exposure file or the schema.
+Run it with `just gen-ui-config`. tests/test_published.py fails when the committed file
+is out of date with the exposure file or the schema.
 """
 
 from __future__ import annotations

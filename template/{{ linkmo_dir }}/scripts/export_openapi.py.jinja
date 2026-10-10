@@ -4,7 +4,7 @@ FastAPI builds the OpenAPI document from the registered routes, and the routes c
 the exposure file and the schema, so the document can be made here exactly as the running
 server makes it at /openapi.json. The committed copy lets a reader or a client generator
 see the contract without starting anything, and tests/test_published.py fails when it
-falls behind. Run it with `just gen-openapi`.
+is out of date. Run it with `just gen-openapi`.
 
 When LinkML's gen-openapi gains a console script, and the fixes that let it describe list
 responses and enums without values, the same recipe can publish its output instead.
@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 
 def build_contract() -> dict:
-    """The OpenAPI document, built from the schema alone; no record is read."""
+    """The OpenAPI document, built from the schema alone. No record is read."""
     from {{ python_package }}.server import app
 
     return app.openapi()

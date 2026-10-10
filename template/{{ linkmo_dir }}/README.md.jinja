@@ -28,4 +28,4 @@ The template created these files once and never overwrites them:
 - `tests/expected_counts.yaml` lists the questions your data must answer and how many records each returns.
 - `project.justfile` holds your own recipes.
 
-Everything else follows the template: `copier update -a .copier-answers.linkmo.yml --trust` from the host root brings in a new version, on its own and without touching the sidecar.
+Everything else follows the template. Run `copier update -a .copier-answers.linkmo.yml --trust` from the host root to bring in a new version. It updates this template on its own and does not touch the sidecar.

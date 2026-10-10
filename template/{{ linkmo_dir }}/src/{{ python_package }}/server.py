@@ -1,7 +1,7 @@
 """The FastAPI application: the generated endpoints, CORS, caching and the probes.
 
 The class listings and the hand operations are registered from the exposure file when
-this module is imported; the records are read once at startup, so ``/ready`` answers 200
+this module is imported. The records are read once at startup, so ``/ready`` answers 200
 only when the data source has loaded. Run it with ``just serve``, or with uvicorn as
 ``<package>.server:app``.
 """

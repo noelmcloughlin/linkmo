@@ -46,7 +46,7 @@ schema_path:
   type: str
   help: |
     Where is the LinkML schema? Give a path from the host root, or
-    pkg:<package>/<path> for a schema shipped inside an installed package.
+    pkg:<package>/<path> for a schema inside an installed package.
   default: >-
     {%- if _external_data.sidecar.project_slug is defined -%}
     {{ (sidecar_dir ~ '/') if sidecar_dir else '' }}src/{{ project_slug }}/schema/{{ project_slug }}.yaml
@@ -170,8 +170,8 @@ _skip_if_exists:
   - "{{ linkmo_dir }}/tests/expected_counts.yaml"
   - "{{ linkmo_dir }}/tests/test_hand.py"
 
-# Copier runs tasks during an update too, inside its temporary renders, so the one task
-# is limited to the first copy. It generates the datamodel only when the module points
+# The one task runs only on the first copy, because copier runs tasks during an update
+# too, inside its temporary renders. It generates the datamodel only when the module points
 # into the sidecar and the file is missing, and it never installs anything.
 _tasks:
   - command:
@@ -189,9 +189,9 @@ _message_after_copy: |
     just --justfile {{ linkmo_dir }}/justfile cli --help
     just --justfile {{ linkmo_dir }}/justfile serve
 
-  {{ linkmo_dir }}/{{ exposure_file }} says which classes are exposed; until it names
-  them, every class the root class collects is. Fill in
-  {{ linkmo_dir }}/tests/expected_counts.yaml as your data settles.
+  {{ linkmo_dir }}/{{ exposure_file }} says which classes are exposed. Until it names
+  them, every class the root class collects is exposed. Fill in
+  {{ linkmo_dir }}/tests/expected_counts.yaml as your data becomes stable.
 
   Update this template on its own, from the host root:
     copier update -a {{ _copier_conf.answers_file }} --trust

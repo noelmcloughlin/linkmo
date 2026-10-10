@@ -48,8 +48,8 @@ def _accept_strings_for_valueless_enums(module: ModuleType) -> None:
     gen-pydantic writes such an enum as a bare ``str`` subclass. Pydantic then accepts only
     instances of that subclass, so every value read from a file fails, and FastAPI cannot
     describe the field in its contract. Giving the subclass a string schema and rebuilding
-    the models fixes both. This can go once pydanticgen writes these enums as plain strings
-    (linkml/linkml#4100).
+    the models fixes both. This can be removed once pydanticgen writes these enums as plain
+    strings (linkml/linkml#4100).
     """
     patched = False
     for name, enum in schema_view().all_enums().items():

@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 # linkml, the package of generators, is left out on purpose. The kernels need only
 # linkml-runtime, and gen-pydantic runs in the LinkML sidecar's own environment. linkml
 # 1.12.0 requires pyshexc>=0.10.3, whose only release, 0.10.3.post1, requires
-# chardet>=7.4.1, so it cannot sit beside a package that pins chardet==5.2.0, as
+# chardet>=7.4.1, so it cannot be installed beside a package that pins chardet==5.2.0, as
 # ai-atlas-nexus 1.2.5 does. Without it, such a data source stays installable.
 dependencies = [
     "click>=8.2",
