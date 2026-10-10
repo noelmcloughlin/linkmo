@@ -11,8 +11,9 @@ collection slots hold the records. Records that share an identifier, such as a r
 the mapping rows another file adds to it, are merged before they are validated: a list
 gains the values it lacks, any other value is replaced. Each record is then built with
 the model of its own class, named by its designator slot when it has one, else the first
-of the slot's range and its subclasses that accepts it. A record no model accepts is left
-out and its error is kept for the listing's ``validation_errors``.
+of the slot's range and its subclasses that accepts it, which is the choice pydantic makes
+for a union of them. A record no model accepts is left out and its error is kept for the
+listing's ``validation_errors``.
 
 ``ObjectSource`` wraps any object with a ``query(class_name, **filters)`` method and
 passes the question on unchanged, including the parameters the exposure file adds.
@@ -197,8 +198,10 @@ class YamlDirectory:
         else:
             candidates = [range_name, *(c for c in subclasses(view, range_name) if c != range_name)]
         first_error: str | None = None
+        # The datamodel has a model for every class, abstract and mixin ones included, and
+        # real data uses them, so the schema's flags are not a reason to skip a class.
         for name in candidates:
-            if name not in classes or classes[name].abstract or classes[name].mixin:
+            if name not in classes:
                 continue
             try:
                 self.records.append((name, model(name)(**data)))
