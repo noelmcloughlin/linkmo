@@ -135,3 +135,61 @@ def test_the_derived_exposure_is_the_root_class_collections(tmp_path, sidecar_te
     # The generated tests pass on the derived exposure too, with an empty count table.
     result = h.run_project(project, "-m", "pytest", "-q", "-p", "no:cacheprovider")
     assert result.returncode == 0, result.stdout[-3000:]
+
+
+SOURCE_EXPOSURE = """\
+generator_args:
+  openapi:
+    expose:
+      classes:
+        Animal:
+          path: /animal
+          parameters: [adopted_by]
+        Dog:
+          path: /dog
+        Person:
+          path: /person
+    overlay:
+      components:
+        parameters:
+          adopted_by:
+            in: query
+            name: adopted_by
+            schema:
+              type: string
+            description: The person who adopted the animals
+"""
+
+
+def test_a_python_source_answers_with_a_parameter_the_exposure_adds(tmp_path, sidecar_template):
+    host = h.make_host(tmp_path, sidecar_template)
+    h.render_linkmo(host, {"data_source": "python", "data_object": "pets_linkmo.pets_source:PetsSource"})
+    project = host / "pets-linkmo"
+    assert 'DATA = _setting("DATA", "pets_linkmo.pets_source:PetsSource")' in (
+        project / "src" / "pets_linkmo" / "settings.py"
+    ).read_text(encoding="utf-8")
+    shutil.copy2(h.PETS / "pets_source.py", project / "src" / "pets_linkmo" / "pets_source.py")
+    (project / "exposure.yaml").write_text(SOURCE_EXPOSURE, encoding="utf-8")
+
+    def cli(*args: str) -> dict:
+        result = h.run_project(project, "-m", "pets_linkmo", *args)
+        assert result.returncode == 0, result.stderr
+        return json.loads(result.stdout)
+
+    adopted = cli("animal", "--adopted_by", "aoife")
+    assert sorted(item["id"] for item in adopted["items"]) == ["biscuit", "mittens"]
+    assert h.run_project(project, "-m", "pets_linkmo", "dog", "--adopted_by", "aoife").returncode == 2
+    # The identifier alone fetches one record; with an added parameter the source answers a listing.
+    assert cli("animal", "rex")["item"]["name"] == "Rex"
+    assert cli("animal", "rex", "--adopted_by", "aoife") == {"items": [], "count": 0, "validation_errors": []}
+    api = h.run_project(
+        project,
+        "-c",
+        "import json\nfrom fastapi.testclient import TestClient\nfrom pets_linkmo.server import app\n"
+        "print(json.dumps(TestClient(app).get('/animal', params={'adopted_by': 'aoife'}).json()))",
+    )
+    assert api.returncode == 0, api.stderr
+    assert json.loads(api.stdout) == adopted
+    # The project's own tests pass with the Python source too.
+    result = h.run_project(project, "-m", "pytest", "-q", "-p", "no:cacheprovider")
+    assert result.returncode == 0, result.stdout[-3000:]
