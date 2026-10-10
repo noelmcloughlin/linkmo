@@ -41,9 +41,13 @@ def to_query(exposure, args: list[str]) -> tuple[str, dict[str, str]]:
         elif token.startswith("--") and token[2:] in flags:
             params[token[2:]] = "true"
             index += 1
-        elif token.startswith("--"):
+        elif token.startswith("--") and index + 1 < len(rest) and not rest[index + 1].startswith("--"):
             params[token[2:]] = rest[index + 1]
             index += 2
+        elif token.startswith("--"):
+            # An option without a value is a flag the exposure file added.
+            params[token[2:]] = "true"
+            index += 1
         else:
             params[exposed.identifier if exposed and exposed.identifier else "id"] = token
             index += 1
