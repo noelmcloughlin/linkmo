@@ -223,9 +223,10 @@ def project_env(project: Path) -> dict[str, str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env["PYTHONPATH"] = str(project / "src")
     env["LINKMO_PYTHON"] = PROJECT_PYTHON
-    sssom = tool("sssom")
-    if sssom:
-        env["LINKMO_SSSOM"] = sssom
+    for variable, name in (("LINKMO_SSSOM", "sssom"), ("LINKMO_DATASETTE", "datasette"), ("LINKMO_GEN_DOC", "gen-doc")):
+        found = tool(name)
+        if found:
+            env[variable] = found
     return env
 
 

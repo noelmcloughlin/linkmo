@@ -100,11 +100,38 @@ def test_the_sssom_recipe_validates_each_mapping_file(pets_project, tmp_path):
     assert h.run_just(pets_project, "validate-sssom", str(broken)).returncode != 0
 
 
-def test_the_hooks_say_they_are_not_in_this_version(pets_project):
-    for recipe in ("browse", "gen-doc-examples"):
-        result = h.run_just(pets_project, recipe)
-        assert result.returncode != 0
-        assert "not in this version" in result.stderr
+@pytest.mark.skipif(not (h.tool("datasette") and h.tool("gen-doc")), reason="the browse and docs tools are not installed")
+def test_the_browse_build_holds_every_record_in_its_tables(pets_project):
+    import sqlite3
+
+    result = h.run_just(pets_project, "build-browse")
+    assert result.returncode == 0, result.stderr
+    assert "refused" not in result.stdout and "do not exist" not in result.stdout
+    database = pets_project / "browse" / "pets.sqlite"
+    metadata = h.yaml.safe_load((pets_project / "browse" / "metadata.yaml").read_text(encoding="utf-8"))
+    with sqlite3.connect(database) as connection:
+        def rows(table: str) -> int:
+            return connection.execute(f'select count(*) from "{table}"').fetchone()[0]
+
+        # A table holds its class's records and its subclasses': 15 animals, 24 named things.
+        assert (rows("Dog"), rows("Cat"), rows("Animal"), rows("NamedThing")) == (6, 5, 15, 24)
+        assert rows("Animal_friends") == 5
+        found = connection.execute(
+            """select id from "Animal" where rowid in (select rowid from "Animal_fts" where "Animal_fts" match 'whiskers')"""
+        ).fetchall()
+        assert found == [("whiskers",)]
+    tables = metadata["databases"]["pets"]["tables"]
+    assert tables["Animal"]["label_column"] == "name"
+    assert "species" in tables["Animal"]["facets"]
+
+
+@pytest.mark.skipif(not h.tool("gen-doc"), reason="gen-doc is not installed beside LINKMO_TEST_PYTHON")
+def test_gen_doc_renders_each_class_page_with_its_example(pets_project):
+    result = h.run_just(pets_project, "gen-doc")
+    assert result.returncode == 0, result.stderr
+    assert "validated 5 examples, 0 failed" in result.stdout
+    page = (pets_project / "docs" / "elements" / "Dog.md").read_text(encoding="utf-8")
+    assert "## Examples" in page and "### Example: Dog-bella" in page
 
 
 def test_the_derived_exposure_is_the_root_class_collections(tmp_path, sidecar_template):
