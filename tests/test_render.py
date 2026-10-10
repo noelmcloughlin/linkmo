@@ -60,6 +60,17 @@ def test_without_a_sidecar_the_defaults_fall_back_to_the_host(tmp_path):
     assert (host / "my-host-linkmo" / "justfile").is_file()
 
 
+def test_copying_into_the_current_folder_names_the_slug_after_it(tmp_path, monkeypatch):
+    host = h.make_host(tmp_path, None, name="Zoo-Host")
+    monkeypatch.chdir(host)
+    from copier import run_copy
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        run_copy(str(h.TEMPLATE_ROOT), ".", data={}, defaults=True, unsafe=True, vcs_ref="HEAD", quiet=True)
+    assert h.answers(host)["project_slug"] == "zoo_host"
+
+
 def test_nothing_under_the_sidecar_changes_but_its_generated_datamodel(pets_host):
     host, _ = pets_host
     assert h.git(host, "diff", "--name-only", "HEAD", "--", ".linkml") == ""

@@ -24,7 +24,7 @@ project_slug:
   help: The schema's slug, which names its schema file and its datamodel module
   default: >-
     {{ _external_data.sidecar.project_slug
-       | default(_copier_conf.dst_path | string | basename | lower
+       | default(_copier_conf.dst_path | string | realpath | basename | lower
                  | regex_replace('[^a-z0-9]+', '_') | regex_replace('^[^a-z]+|_+$', ''), true) }}
   validator: >-
     {% if not (project_slug | regex_search('^[a-z][-_a-z0-9]+$', ignorecase=False)) %}
