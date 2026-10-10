@@ -12,6 +12,12 @@ python := env("LINKMO_PYTHON", "uv run python")
 sssom := env("LINKMO_SSSOM", "uvx --from sssom sssom")
 package := env("LINKMO_PACKAGE")
 host_root := ".."
+# The browse and docs steps need linkml beside the project; uv installs the browse and docs
+# dependency groups on first use.
+browse_python := env("LINKMO_BROWSE_PYTHON", env("LINKMO_PYTHON", "uv run --group browse python"))
+datasette := env("LINKMO_DATASETTE", "uv run --group browse datasette")
+docs_python := env("LINKMO_DOCS_PYTHON", env("LINKMO_PYTHON", "uv run --group docs python"))
+gen_doc := env("LINKMO_GEN_DOC", "uv run --group docs gen-doc")
 
 # List the recipes
 default:
@@ -72,14 +78,26 @@ validate-sssom dir="mappings":
     if [ ${#files[@]} -eq 0 ]; then echo "no *.sssom.tsv files in {{ dir }}"; exit 0; fi
     for file in "${files[@]}"; do echo "sssom validate $file"; {{ sssom }} validate "$file"; done
 
-# Not in this version: a Datasette browse UI over the records
-[group('hooks')]
-browse:
-    @echo "browse: not in this version of the template. It will build SQLite tables from gen-sqltables, load the records, add metadata and full-text search, then run Datasette. Until then, add a recipe of your own to project.justfile." >&2; exit 1
+# Build the SQLite database and its Datasette metadata under browse/
+[group('browse')]
+build-browse:
+    {{ browse_python }} scripts/build_browse.py
 
-# Not in this version: gen-doc with the instance examples rendered in the class pages
-[group('hooks')]
-gen-doc-examples:
-    @echo "gen-doc-examples: not in this version of the template. It will run gen-doc over the schema with the records in tests/expected_counts.yaml and the data directory as examples. Until then, add a recipe of your own to project.justfile." >&2; exit 1
+# Serve browse/ with Datasette on http://127.0.0.1:8001, building it first if it is missing
+[group('browse')]
+browse:
+    test -f browse/metadata.yaml || just build-browse
+    {{ datasette }} serve browse
+
+# Write one example per class with records to docs/elements/examples, and validate them
+[group('docs')]
+gen-examples:
+    {{ docs_python }} scripts/gen_examples.py docs/elements/examples --validate
+
+# Write the schema's pages to docs/elements with gen-doc, each class page with its example
+[group('docs')]
+gen-doc: gen-examples
+    rm -f docs/elements/*.md
+    {{ gen_doc }} --render-imports --example-directory docs/elements/examples --directory docs/elements "$({{ python }} -c 'from {{ package }}.settings import schema_path; print(schema_path())')"
 
 import? "project.justfile"

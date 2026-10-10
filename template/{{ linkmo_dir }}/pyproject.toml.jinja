@@ -30,6 +30,19 @@ dev = [
     "httpx>=0.27",
     "pytest>=8.0",
 ]
+# The browse build and the schema's pages need linkml, for gen-sqltables, gen-doc and the
+# validator. Beside a package that pins chardet==5.2.0, the resolver can choose linkml 1.11
+# at most for these groups, for the reason given above. Datasette stays below 1.0 because
+# 1.0 reads the hidden tables, label columns and facets from datasette.yaml, not from the
+# metadata file the browse build writes.
+browse = [
+    "datasette>=0.65,<1",
+    "linkml>=1.9",
+    "sqlite-utils>=4.2.1",
+]
+docs = [
+    "linkml>=1.9",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/{{ python_package }}"]

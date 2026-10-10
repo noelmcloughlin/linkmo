@@ -260,3 +260,55 @@ def load_source() -> Source:
 def reset_source() -> None:
     """Forget the loaded records, after the data changes."""
     load_source.cache_clear()
+
+
+def _own_class(view, record: Any, fallback: str) -> str:
+    """The class a record belongs to: its model's, else the class its designator names."""
+    classes = view.all_classes()
+    if isinstance(record, BaseModel) and type(record).__name__ in classes:
+        return type(record).__name__
+    if isinstance(record, dict):
+        designator = designator_slot(view, fallback)
+        named = record.get(designator) if designator else None
+        local = str(named).replace("#", "/").replace(":", "/").rsplit("/", 1)[-1] if named else None
+        if local in classes:
+            return local
+    return fallback
+
+
+def rows_by_class(source: Source | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Every record as a plain dict under its slot names, grouped by its own class.
+
+    The browse build and the class examples read the data this way. A YAML directory gives
+    its records as read. Any other source is asked for every exposed class, and a record
+    that two listings return, such as a subclass's record in its parent's listing, is kept
+    once under its own class.
+    """
+    from .exposure import load_exposure
+
+    source = source or load_source()
+    view = schema_view()
+    if isinstance(source, YamlDirectory):
+        pairs = list(source.records)
+    else:
+        pairs = [
+            (_own_class(view, record, exposed.name), record)
+            for exposed in load_exposure().classes.values()
+            for record in source.query(exposed.name)
+        ]
+    rows: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    seen: set[tuple[str, str]] = set()
+    for class_name, record in pairs:
+        if isinstance(record, BaseModel):
+            data = record.model_dump(mode="json", by_alias=True, exclude_none=True)
+        elif isinstance(record, dict):
+            data = {k: _plain(v) for k, v in record.items() if v is not None}
+        else:
+            continue
+        key_slot = identifier_slot(view, class_name)
+        if key_slot and key_slot in data:
+            if (class_name, str(data[key_slot])) in seen:
+                continue
+            seen.add((class_name, str(data[key_slot])))
+        rows[class_name].append(data)
+    return dict(rows)
