@@ -1,0 +1,33 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+
+version: 2
+updates:
+  # This repository's own workflows. Every action is pinned to a commit SHA
+  # with its version in a trailing comment; Dependabot bumps both together.
+  # A SHA pin goes stale silently: nothing else reports its age.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(actions)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # The test environment (pyproject.toml and uv.lock): copier, pytest and
+  # just, and the generated project's packages that run it. test.yaml is the
+  # gate that has to stay green. The floors in the generated project's own
+  # pyproject.toml are template text, so they move by hand.
+  - package-ecosystem: uv
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      python:
+        patterns:
+          - "*"
