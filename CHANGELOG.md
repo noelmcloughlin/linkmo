@@ -2,6 +2,8 @@
 
 All notable changes to this template are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+A version is a git tag, which copier records in each host's `.copier-answers.linkmo.yml`. The template stays below 1.0.0 until its questions settle, so a breaking change bumps the minor version.
+
 ## [Unreleased]
 
 ### Added
