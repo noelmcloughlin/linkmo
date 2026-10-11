@@ -125,15 +125,14 @@ def mirror(source: str, ref: str, dest: Path) -> Path:
     """A bare repository with ``ref`` of ``source`` as its main branch, and the tags.
 
     Fetching one ref, rather than cloning, keeps a test independent of whatever other
-    branches a local clone carries.
+    branches a local clone carries. Git resolves the ref as it resolves any ref given to
+    fetch, so it can be a branch, a remote-tracking branch of a local clone, or a release
+    tag. A release tag points at a tag object, which no branch may hold, so main is set
+    to the commit that the fetched ref leads to.
     """
-    subprocess.run(["git", "init", "-q", "--bare", str(dest)], check=True)
-    full_ref = ref
-    if Path(source).is_dir():
-        full_ref = git(Path(source), "rev-parse", "--symbolic-full-name", ref).strip() or ref
-    elif not ref.startswith("refs/"):
-        full_ref = f"refs/heads/{ref}"
-    git(dest, "fetch", "-q", "--tags", source, f"{full_ref}:refs/heads/main")
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(dest)], check=True)
+    git(dest, "fetch", "-q", "--tags", source, ref)
+    git(dest, "update-ref", "refs/heads/main", "FETCH_HEAD^{commit}")
     return dest
 
 
