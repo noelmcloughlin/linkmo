@@ -9,10 +9,10 @@ It sits beside [linkml-project-copier](https://github.com/linkml/linkml-project-
 From the root of a host that has a `.linkml/` sidecar, with copier 9.4 or later:
 
 ```bash
-copier copy --trust /path/to/linkmo-project-copier .
+copier copy --trust gh:noelmcloughlin/linkmo-project-copier .
 ```
 
-Copier needs `--trust` for the one copy step, which generates the sidecar's Python datamodel when it is missing. The answers go to `.copier-answers.linkmo.yml` at the host root, beside the sidecar's answers.
+Copier takes the latest release; `--vcs-ref v0.1.0` pins one. It needs `--trust` for the one copy step, which generates the sidecar's Python datamodel when it is missing. The answers go to `.copier-answers.linkmo.yml` at the host root, beside the sidecar's answers.
 
 Copier writes the project to `<slug>-linkmo/`. Its recipes run from the host root the way the sidecar's do:
 
