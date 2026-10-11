@@ -6,6 +6,8 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-11
+
 ### Added
 
 - **The linkmo copier template.** It turns a LinkML schema and records from a YAML directory or a Python object into a click command line, a FastAPI API with an OpenAPI 3.1 contract, a Datasette browse build, gen-doc pages with examples, and tests. The tests check that the command line and the API give one answer. The template reads its defaults from the `.linkml/` sidecar's answers and writes nothing under `.linkml/`.
