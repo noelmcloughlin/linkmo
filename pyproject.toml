@@ -1,6 +1,8 @@
 # The template's own test configuration. The template itself is copier.yaml and template/.
 # This file only tells pytest how to run tests/, which render the template and run the
-# project it generates. See CONTRIBUTING.md for the environment the tests expect.
+# project it generates. See CONTRIBUTING.md for the environment the tests expect. Nothing
+# builds or installs this project, so its version stays 0.0.0. The template's version is
+# its git tag, which copier records in each host's answers file.
 [project]
 name = "linkmo-project-copier"
 version = "0.0.0"
@@ -14,6 +16,24 @@ dev = [
     "copier>=9.4.0",
     "jinja2-time>=0.2.0",
     "pytest>=8.0",
+    # The tests run the generated project's recipes with just.
+    "rust-just>=1.27",
+]
+# The generated project's packages: its dependencies and its dev, browse and docs groups,
+# with sssom for the mappings recipe. LINKMO_TEST_PYTHON can then be this environment's
+# Python, and no test is skipped. Keep the list in step with the generated pyproject.toml.
+project = [
+    "click>=8.2",
+    "fastapi>=0.124",
+    "uvicorn>=0.30",
+    "linkml-runtime>=1.10,<2",
+    "pydantic>=2.11,<3",
+    "pyyaml>=6.0",
+    "httpx>=0.27",
+    "datasette>=0.65,<1",
+    "linkml>=1.9",
+    "sqlite-utils>=4.2.1",
+    "sssom>=0.4",
 ]
 
 [tool.pytest.ini_options]
