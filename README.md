@@ -111,4 +111,4 @@ Each template is updated separately and runs only its own migrations. Copier ref
 
 - Path parameters in hand-written operations, and paging in listings.
 
-[CONTRIBUTING.md](CONTRIBUTING.md) covers work on the template itself.
+[CONTRIBUTING.md](CONTRIBUTING.md) covers work on the template itself, and [SECURITY.md](SECURITY.md) how to report a vulnerability.
