@@ -1,0 +1,70 @@
+name: Test template
+
+# Renders the template beside a .linkml/ sidecar made by linkml-project-copier,
+# then runs the project it generates, as tests/helpers.py describes. Each run
+# tests two sidecars. v0.5.0 is the release the linkml-sidecar skill installs
+# (the pin in its scripts/linkml-scaffold.sh), so it is what hosts have; move
+# it with that pin. main is upstream's next release as it takes shape. A
+# failure on main alone means upstream changed, not this template, and the
+# weekly run finds that out between pushes.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+# Least-privilege default: every scope starts at none, and the job opts back
+# into read access to check out the code.
+permissions: {}
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (sidecar ${{ matrix.sidecar-ref }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        sidecar-ref: [v0.5.0, main]
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+          # Sets UV_PYTHON for the steps below: the oldest Python the
+          # generated project supports.
+          python-version: "3.11"
+
+      - name: Set up Python
+        run: uv python install "$UV_PYTHON"
+
+      # --locked fails the run when uv.lock is out of step with
+      # pyproject.toml. The project group installs the generated project's
+      # packages beside copier and pytest, so this environment's Python also
+      # runs the project, and no test is skipped.
+      - name: Install dependencies
+        run: uv sync --locked --all-groups
+
+      - name: Run the tests
+        env:
+          LINKML_PROJECT_COPIER_REF: ${{ matrix.sidecar-ref }}
+          LINKMO_TEST_PYTHON: ${{ github.workspace }}/.venv/bin/python
+        run: uv run --frozen pytest -v
