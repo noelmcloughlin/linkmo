@@ -19,11 +19,15 @@ from tests import helpers as h
 
 pytestmark = pytest.mark.slow
 
+# The sidecar's newer version in these tests. The mirror carries linkml-project-copier's
+# real tags, so the test's own release takes a version no real release will reach soon.
+SIDECAR_NEXT = "v99.0.0"
+
 
 @pytest.fixture
 def two_templates(tmp_path, sidecar_template):
     """A host with the sidecar at the ref under test and linkmo at v0.1.0, and a newer
-    version of each template, v0.6.0 and v0.2.0, that declares a migration."""
+    version of each template, SIDECAR_NEXT and v0.2.0, that declares a migration."""
     lpc = tmp_path / "lpc-work"
     subprocess.run(["git", "clone", "-q", str(sidecar_template), str(lpc)], check=True)
     for key, value in (("user.email", "test@example.org"), ("user.name", "Test"), ("commit.gpgsign", "false"), ("tag.gpgsign", "false")):
@@ -35,9 +39,9 @@ def two_templates(tmp_path, sidecar_template):
 
     line = 'echo "{name} $PWD $STAGE $VERSION_FROM $VERSION_TO" >> "$MIGRATION_LOG"'
     with open(lpc / "copier.yaml", "a", encoding="utf-8") as handle:
-        handle.write(f"  - version: v0.6.0\n    command: {line.format(name='sidecar')}\n")
+        handle.write(f"  - version: {SIDECAR_NEXT}\n    command: {line.format(name='sidecar')}\n")
     h.commit_all(lpc, "a migration")
-    h.git(lpc, "tag", "v0.6.0")
+    h.git(lpc, "tag", SIDECAR_NEXT)
     with open(linkmo / "copier.yaml", "a", encoding="utf-8") as handle:
         handle.write(f"\n_migrations:\n  - version: v0.2.0\n    command: {line.format(name='linkmo')}\n")
     with open(linkmo / "template" / "{{ linkmo_dir }}" / "justfile", "a", encoding="utf-8") as handle:
@@ -62,12 +66,12 @@ def _log(path: Path) -> list[list[str]]:
 def test_each_update_runs_only_its_own_migrations_in_its_own_folder(two_templates):
     host, log = two_templates
     with h.task_env(MIGRATION_LOG=str(log)):
-        h.update_sidecar(host, "v0.6.0")
+        h.update_sidecar(host, SIDECAR_NEXT)
         sidecar_entries = _log(log)
         assert [entry[:3] for entry in sidecar_entries] == [["sidecar", str(host / ".linkml"), "after"]]
-        assert sidecar_entries[0][4] == "v0.6.0"
+        assert sidecar_entries[0][4] == SIDECAR_NEXT
         assert h.git(host, "status", "--short").split() == ["M", ".linkml/.copier-answers.yml"]
-        h.commit_all(host, "sidecar v0.6.0")
+        h.commit_all(host, f"sidecar {SIDECAR_NEXT}")
 
         h.update_linkmo(host, "v0.2.0")
         entries = _log(log)
@@ -100,7 +104,7 @@ def test_the_root_template_waits_for_a_clean_host_but_the_sidecar_does_not(two_t
         h.git(host, "checkout", "--", ".linkml/README.md")
         # The sidecar's destination is .linkml/, and its dirty check stops there.
         (host / "pets-linkmo" / "README.md").write_text("changed\n", encoding="utf-8")
-        h.update_sidecar(host, "v0.6.0")
+        h.update_sidecar(host, SIDECAR_NEXT)
         assert _log(log)[0][0] == "sidecar"
 
 
