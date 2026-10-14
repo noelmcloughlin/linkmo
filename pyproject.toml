@@ -4,7 +4,7 @@
 # builds or installs this project, so its version stays 0.0.0. The template's version is
 # its git tag, which copier records in each host's answers file.
 [project]
-name = "linkmo-project-copier"
+name = "linkmo"
 version = "0.0.0"
 description = "A copier template that turns a LinkML schema and its data into a command line, an HTTP API and tests"
 license = "Apache-2.0"
