@@ -269,3 +269,12 @@ def test_a_data_file_may_hold_a_list_of_root_instances(pets_project, tmp_path):
     assert sorted(item["id"] for item in animals["items"]) == ["luna", "rex"]
     assert animals["validation_errors"] == []
     assert _listing(pets_project, data, "person")["count"] == 1
+
+
+def test_a_designator_naming_an_unknown_class_is_reported_on_the_listing(pets_project, tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "Animal-001.yaml").write_text("id: nessie\ntype: Monster\nname: Nessie\nspecies: dog\n", encoding="utf-8")
+    animals = _listing(pets_project, data, "animal")
+    assert animals["count"] == 0
+    assert animals["validation_errors"] == ["Animal nessie: type names 'Monster', which the schema does not define"]

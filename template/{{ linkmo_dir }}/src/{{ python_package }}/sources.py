@@ -205,11 +205,19 @@ class YamlDirectory:
     def _build(self, range_name: str, data: dict[str, Any]) -> None:
         view = schema_view()
         classes = view.all_classes()
+        key_slot = identifier_slot(view, range_name)
+        key = data.get(key_slot, "?") if key_slot else "?"
         designator = designator_slot(view, range_name)
         named = data.get(designator) if designator else None
         if named:
             # A designator may hold a class name, a CURIE or a URI; the local name decides.
             local = str(named).replace("#", "/").replace(":", "/").rsplit("/", 1)[-1]
+            if local not in classes:
+                # Keyed by the collection's class, so that its listing reports the record.
+                self.errors[range_name].append(
+                    f"{range_name} {key}: {designator} names {named!r}, which the schema does not define"
+                )
+                return
             candidates = [local]
         else:
             candidates = [range_name, *(c for c in subclasses(view, range_name) if c != range_name)]
@@ -217,16 +225,12 @@ class YamlDirectory:
         # The datamodel has a model for every class, abstract and mixin ones included, and
         # real data uses them, so the schema's flags are not a reason to skip a class.
         for name in candidates:
-            if name not in classes:
-                continue
             try:
                 self.records.append((name, model(name)(**data)))
                 return
             except (ValidationError, TypeError, LookupError) as exc:
-                first_error = first_error or f"{name} {data.get('id', '?')}: {_describe(exc)}"
-        self.errors[candidates[0] if candidates else range_name].append(
-            first_error or f"{range_name} {data.get('id', '')}: no concrete class accepts it"
-        )
+                first_error = first_error or f"{name} {key}: {_describe(exc)}"
+        self.errors[candidates[0]].append(first_error or f"{range_name} {key}: no concrete class accepts it")
 
     def query(self, class_name: str, **filters: Any) -> list[BaseModel]:
         check_filters(class_name, filters)
