@@ -6,10 +6,12 @@ the slot equals the value or, for a multivalued slot, when its list holds the va
 
 ``YamlDirectory`` reads every ``.yaml``, ``.yml`` and ``.json`` file under a directory once.
 A file whose name starts with a class name and a dash, as in ``Person-001.yaml``, holds
-records of that class. Any other file holds an instance of the root class, whose
-collection slots hold the records. Records that share an identifier, such as a record and
-the mapping rows another file adds to it, are merged before they are validated: a list
-gains the values it lacks, any other value is replaced. Each record is then built with
+records of that class. Any other file holds an instance of the root class, or a list of
+them, whose collection slots hold the records. Two records that share an identifier are one record when
+one's class is the other's or an ancestor of it, such as a record and the mapping rows
+another file adds to it, and they are merged before they are validated: a list gains the
+values it lacks, any other value is replaced. Records of unrelated classes that happen to
+share a value are both kept. Each record is then built with
 the model of its own class. The record's designator slot names that class when it has
 one. Otherwise the model is the first of the slot's range and its subclasses that accepts
 the record, which is the choice pydantic makes for a union of them. A record no model
@@ -140,7 +142,9 @@ class YamlDirectory:
         view = schema_view()
         root = root_class(view)
         classes = view.all_classes()
-        merged: dict[str, tuple[str, dict[str, Any]]] = {}
+        # The records with an identifier, keyed by it. One key holds one entry per class
+        # lineage, so a Person and a Shelter that share a value stay two records.
+        keyed: dict[Any, list[tuple[str, dict[str, Any]]]] = defaultdict(list)
         loose: list[tuple[str, dict[str, Any]]] = []
 
         def add(range_name: str, item: Any) -> None:
@@ -149,12 +153,19 @@ class YamlDirectory:
                 return
             key_slot = identifier_slot(view, range_name)
             key = item.get(key_slot) if key_slot else None
-            if key is None:
+            if key is None or isinstance(key, (dict, list)):
                 loose.append((range_name, dict(item)))
-            elif key in merged:
-                _merge(merged[key][1], item)
-            else:
-                merged[key] = (range_name, dict(item))
+                return
+            for index, (other, data) in enumerate(keyed[key]):
+                if range_name == other or range_name in view.class_ancestors(other):
+                    _merge(data, item)
+                    return
+                if other in view.class_ancestors(range_name):
+                    # The same record, listed under a subclass: the subclass names it.
+                    _merge(data, item)
+                    keyed[key][index] = (range_name, data)
+                    return
+            keyed[key].append((range_name, dict(item)))
 
         for path in sorted(p for p in self.directory.rglob("*") if p.suffix in _SUFFIXES and p.is_file()):
             document = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -166,34 +177,47 @@ class YamlDirectory:
             if target is None:
                 self.errors["*"].append(f"{path.name}: no class in the file name and no root class")
                 continue
-            if target == root and isinstance(document, dict):
-                for slot in collection_slots(view, root):
-                    value = document.get(slot.name)
-                    if isinstance(value, dict):
-                        # A collection inlined as a dictionary is keyed by identifier.
-                        key_slot = identifier_slot(view, slot.range) or "id"
-                        value = [
-                            {key_slot: key, **(item if isinstance(item, dict) else {})}
-                            for key, item in value.items()
-                        ]
-                    for item in value or ():
-                        add(slot.range, item)
+            documents = document if isinstance(document, list) else [document]
+            if target == root:
+                for instance in documents:
+                    if not isinstance(instance, dict):
+                        self.errors["*"].append(f"{path.name}: expected a mapping of {root}, read {instance!r}")
+                        continue
+                    for slot in collection_slots(view, root):
+                        value = instance.get(slot.name)
+                        if isinstance(value, dict):
+                            # A collection inlined as a dictionary is keyed by identifier.
+                            key_slot = identifier_slot(view, slot.range) or "id"
+                            value = [
+                                {key_slot: key, **(item if isinstance(item, dict) else {})}
+                                for key, item in value.items()
+                            ]
+                        for item in value or ():
+                            add(slot.range, item)
             else:
-                for item in document if isinstance(document, list) else [document]:
+                for item in documents:
                     add(target, item)
 
-        for range_name, data in [*merged.values(), *loose]:
+        for range_name, data in [*(entry for entries in keyed.values() for entry in entries), *loose]:
             self._build(range_name, data)
         logger.info("Read %d records from %d files under %s", len(self.records), self.files, self.directory)
 
     def _build(self, range_name: str, data: dict[str, Any]) -> None:
         view = schema_view()
         classes = view.all_classes()
+        key_slot = identifier_slot(view, range_name)
+        key = data.get(key_slot, "?") if key_slot else "?"
         designator = designator_slot(view, range_name)
         named = data.get(designator) if designator else None
         if named:
             # A designator may hold a class name, a CURIE or a URI; the local name decides.
             local = str(named).replace("#", "/").replace(":", "/").rsplit("/", 1)[-1]
+            if local not in classes:
+                # Keyed by the collection's class, so that its listing reports the record.
+                self.errors[range_name].append(
+                    f"{range_name} {key}: {designator} names {named!r}, which the schema does not define"
+                )
+                return
             candidates = [local]
         else:
             candidates = [range_name, *(c for c in subclasses(view, range_name) if c != range_name)]
@@ -201,16 +225,12 @@ class YamlDirectory:
         # The datamodel has a model for every class, abstract and mixin ones included, and
         # real data uses them, so the schema's flags are not a reason to skip a class.
         for name in candidates:
-            if name not in classes:
-                continue
             try:
                 self.records.append((name, model(name)(**data)))
                 return
             except (ValidationError, TypeError, LookupError) as exc:
-                first_error = first_error or f"{name} {data.get('id', '?')}: {_describe(exc)}"
-        self.errors[candidates[0] if candidates else range_name].append(
-            first_error or f"{range_name} {data.get('id', '')}: no concrete class accepts it"
-        )
+                first_error = first_error or f"{name} {key}: {_describe(exc)}"
+        self.errors[candidates[0]].append(first_error or f"{range_name} {key}: no concrete class accepts it")
 
     def query(self, class_name: str, **filters: Any) -> list[BaseModel]:
         check_filters(class_name, filters)

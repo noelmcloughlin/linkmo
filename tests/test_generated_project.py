@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
 import textwrap
 from pathlib import Path
 
@@ -150,7 +151,6 @@ def test_the_derived_exposure_is_the_root_class_collections(tmp_path, sidecar_te
     excluding = tmp_path / "exclude.yaml"
     excluding.write_text("generator_args:\n  openapi:\n    exclude:\n      classes: [Shelter]\n", encoding="utf-8")
     env = h.project_env(project) | {"PETS_LINKMO_EXPOSURE": str(excluding)}
-    import subprocess
 
     def count(command: str) -> subprocess.CompletedProcess:
         return subprocess.run(
@@ -221,3 +221,60 @@ def test_a_python_source_answers_with_a_parameter_the_exposure_adds(tmp_path, si
     # The project's own tests pass with the Python source too.
     result = h.run_project(project, "-m", "pytest", "-q", "-p", "no:cacheprovider")
     assert result.returncode == 0, result.stdout[-3000:]
+
+def _run_with_data(project: Path, data_dir: Path, *args: str) -> subprocess.CompletedProcess:
+    """Run the pets command line against a data directory other than the host's."""
+    env = h.project_env(project) | {"PETS_LINKMO_DATA": str(data_dir)}
+    return subprocess.run([h.PROJECT_PYTHON, "-m", "pets_linkmo", *args], cwd=project, env=env, capture_output=True, text=True)
+
+
+def _listing(project: Path, data_dir: Path, *args: str) -> dict:
+    result = _run_with_data(project, data_dir, *args)
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def test_records_of_unrelated_classes_may_share_an_identifier(pets_project, tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "Registry-001.yaml").write_text(
+        "animals:\n  - id: galway\n    type: Dog\n    name: Galway the dog\n    species: dog\n"
+        "people:\n  - id: galway\n    name: Galway the person\n"
+        "shelters:\n  - id: galway\n    name: Galway Paws\n    city: Galway\n",
+        encoding="utf-8",
+    )
+    # The dog again, under its own class, with one more slot: the same record.
+    (data / "Dog-001.yaml").write_text("id: galway\nbreed: collie\n", encoding="utf-8")
+    person = _listing(project := pets_project, data, "person", "galway")["item"]
+    shelter = _listing(project, data, "shelter", "galway")["item"]
+    dog = _listing(project, data, "dog", "galway")["item"]
+    assert person["name"] == "Galway the person" and "city" not in person
+    assert shelter["name"] == "Galway Paws" and shelter["city"] == "Galway"
+    assert dog["name"] == "Galway the dog" and dog["breed"] == "collie"
+    for scope in ("animal", "person", "shelter"):
+        listing = _listing(project, data, scope)
+        assert listing["count"] == 1 and listing["validation_errors"] == [], scope
+
+
+def test_a_data_file_may_hold_a_list_of_root_instances(pets_project, tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "batch.yaml").write_text(
+        "- animals:\n    - id: rex\n      type: Dog\n      name: Rex\n      species: dog\n"
+        "  people:\n    - id: aoife\n      name: Aoife\n"
+        "- animals:\n    - id: luna\n      type: Dog\n      name: Luna\n      species: dog\n",
+        encoding="utf-8",
+    )
+    animals = _listing(pets_project, data, "animal")
+    assert sorted(item["id"] for item in animals["items"]) == ["luna", "rex"]
+    assert animals["validation_errors"] == []
+    assert _listing(pets_project, data, "person")["count"] == 1
+
+
+def test_a_designator_naming_an_unknown_class_is_reported_on_the_listing(pets_project, tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "Animal-001.yaml").write_text("id: nessie\ntype: Monster\nname: Nessie\nspecies: dog\n", encoding="utf-8")
+    animals = _listing(pets_project, data, "animal")
+    assert animals["count"] == 0
+    assert animals["validation_errors"] == ["Animal nessie: type names 'Monster', which the schema does not define"]
