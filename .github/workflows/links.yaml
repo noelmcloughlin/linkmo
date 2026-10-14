@@ -1,0 +1,61 @@
+name: Check links
+
+# Checks every link in the repository's Markdown on each pull request, each
+# push to main, and weekly, so link rot is caught between pull requests.
+# lychee.toml says how github.com is handled, after knowledge-trust-ladder.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 6 * * 1"
+  workflow_dispatch:
+
+# Least-privilege default: every scope starts at none, and the job opts back
+# into read access to check out the code.
+permissions: {}
+
+concurrency:
+  group: links-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: Check links
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress "**/*.md"
+          fail: true
+
+      # lychee skips GitHub's issue and pull request pages, which can answer a
+      # runner with 500 while the issue is open (lychee.toml). Each one is
+      # checked here through the API with the job's own token: a deleted or
+      # moved issue still fails, and a page GitHub fails to render does not.
+      - name: Check GitHub issue and pull request links
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=0
+          for link in $(git ls-files '*.md' | xargs grep -ohE 'https://github\.com/[^/ )>]+/[^/ )>]+/(issues|pull)/[0-9]+' | sort -u); do
+            path="${link#https://github.com/}"
+            repo="${path%/*/*}"
+            number="${path##*/}"
+            if gh api "repos/$repo/issues/$number" --silent; then echo "OK   $link"; else echo "FAIL $link"; status=1; fi
+          done
+          exit "$status"

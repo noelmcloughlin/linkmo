@@ -6,6 +6,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+### Added
+
+- **A link check.** `links.yaml` runs lychee over the Markdown on each pull request, each push to main and weekly, handling github.com as knowledge-trust-ladder does.
+
 ## [0.1.2] - 2026-10-14
 
 ### Fixed

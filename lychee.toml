@@ -1,0 +1,44 @@
+# lychee link-checker config (links.yaml's "Check links" step, and local
+# runs). The github.com handling follows knowledge-trust-ladder's
+# lychee.toml, which met the same 503s first.
+
+# A failed request is retried with a wait that grows each time, so a host
+# that answers a burst with 503 has time to recover before the link is
+# declared dead.
+max_retries = 3
+retry_wait_time = 5
+
+exclude = [
+  # conventionalcommits.org (Netlify) answers CI runners with 503 on every
+  # retry while serving 200 elsewhere, as knowledge-trust-ladder found. Drop
+  # this exclusion if CI reaches it again.
+  '^https://www\.conventionalcommits\.org/',
+  # A GitHub issue or pull request page can answer a CI runner with 500 while
+  # the issue is open and the page serves 200 elsewhere. links.yaml's next
+  # step checks each such link through GitHub's API instead, so a deleted or
+  # moved issue still fails.
+  '^https://github\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+',
+]
+
+# The local test environment and its caches hold other projects' Markdown.
+exclude_path = [
+  "(^|/)\\.venv/",
+  "(^|/)\\.ruff_cache/",
+]
+
+# github.com answers automated clients with 503 or 429 on a file page
+# (/blob/) while it serves the repository pages. raw.githubusercontent.com
+# serves the same file at the same commit, tag or branch, and answers 404
+# once the file is gone, so lychee checks each file link there instead.
+# lychee remaps a link before it applies `exclude`, so an exclusion for a
+# file link must name its raw address.
+remap = [
+  '^https://github\.com/([^/]+/[^/]+)/blob/([^?#]+)([?#].*)?$ https://raw.githubusercontent.com/$1/$2',
+]
+
+# The rest of github.com also answers a burst of requests from one runner
+# with 503. Pace the requests to it rather than exclude it, so a moved or
+# deleted page still fails.
+[hosts."github.com"]
+concurrency = 2
+request_interval = "250ms"
