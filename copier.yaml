@@ -59,7 +59,9 @@ datamodel_module:
   help: |
     Which Python module did gen-pydantic make from the schema? The default is the
     sidecar's own output, which the copy step generates when it is missing.
-  default: "{{ project_slug }}.datamodel.{{ project_slug }}_pydantic"
+  # A slug may carry a hyphen, which no module path can, so the default writes it as
+  # an underscore.
+  default: "{{ project_slug | replace('-', '_') }}.datamodel.{{ project_slug | replace('-', '_') }}_pydantic"
   validator: >-
     {% if not (datamodel_module | regex_search('^[A-Za-z_][A-Za-z0-9_]*([.][A-Za-z_][A-Za-z0-9_]*)*$')) %}
     A dotted Python module path, such as my_schema.datamodel.my_schema_pydantic.

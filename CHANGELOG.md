@@ -6,6 +6,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+### Fixed
+
+- **A hyphenated slug renders.** The datamodel module default writes the hyphen as an underscore, so `copier copy --defaults` no longer fails its own validator.
+
 ## [0.1.1] - 2026-10-14
 
 ### Changed

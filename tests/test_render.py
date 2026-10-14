@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import warnings
 
+import pytest
 import yaml
 from copier.errors import MissingFileWarning
 
@@ -158,3 +159,16 @@ def test_the_template_leaves_its_own_files_out_of_the_project(pets_host):
     for name in ("copier.yaml", "CHANGELOG.md", "CONTRIBUTING.md", "tests/helpers.py"):
         assert not (host / name).exists(), name
     shutil.rmtree(host / "pets-linkmo" / ".pytest_cache", ignore_errors=True)
+
+
+def test_a_hyphenated_slug_gives_importable_defaults(tmp_path):
+    host = h.make_host(tmp_path, None, name="hyphen")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        h.render_linkmo(host, {"project_slug": "my-schema"})
+    recorded = h.answers(host)
+    assert recorded["datamodel_module"] == "my_schema.datamodel.my_schema_pydantic"
+    assert recorded["python_package"] == "my_schema_linkmo"
+    assert recorded["linkmo_dir"] == "my-schema-linkmo" and recorded["command_name"] == "my-schema"
+    # The schema's own path keeps the slug as the sidecar spells it.
+    assert recorded["schema_path"] == "schema/my-schema.yaml"
