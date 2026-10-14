@@ -7,9 +7,11 @@ the slot equals the value or, for a multivalued slot, when its list holds the va
 ``YamlDirectory`` reads every ``.yaml``, ``.yml`` and ``.json`` file under a directory once.
 A file whose name starts with a class name and a dash, as in ``Person-001.yaml``, holds
 records of that class. Any other file holds an instance of the root class, whose
-collection slots hold the records. Records that share an identifier, such as a record and
-the mapping rows another file adds to it, are merged before they are validated: a list
-gains the values it lacks, any other value is replaced. Each record is then built with
+collection slots hold the records. Two records that share an identifier are one record when
+one's class is the other's or an ancestor of it, such as a record and the mapping rows
+another file adds to it, and they are merged before they are validated: a list gains the
+values it lacks, any other value is replaced. Records of unrelated classes that happen to
+share a value are both kept. Each record is then built with
 the model of its own class. The record's designator slot names that class when it has
 one. Otherwise the model is the first of the slot's range and its subclasses that accepts
 the record, which is the choice pydantic makes for a union of them. A record no model
@@ -140,7 +142,9 @@ class YamlDirectory:
         view = schema_view()
         root = root_class(view)
         classes = view.all_classes()
-        merged: dict[str, tuple[str, dict[str, Any]]] = {}
+        # The records with an identifier, keyed by it. One key holds one entry per class
+        # lineage, so a Person and a Shelter that share a value stay two records.
+        keyed: dict[Any, list[tuple[str, dict[str, Any]]]] = defaultdict(list)
         loose: list[tuple[str, dict[str, Any]]] = []
 
         def add(range_name: str, item: Any) -> None:
@@ -149,12 +153,19 @@ class YamlDirectory:
                 return
             key_slot = identifier_slot(view, range_name)
             key = item.get(key_slot) if key_slot else None
-            if key is None:
+            if key is None or isinstance(key, (dict, list)):
                 loose.append((range_name, dict(item)))
-            elif key in merged:
-                _merge(merged[key][1], item)
-            else:
-                merged[key] = (range_name, dict(item))
+                return
+            for index, (other, data) in enumerate(keyed[key]):
+                if range_name == other or range_name in view.class_ancestors(other):
+                    _merge(data, item)
+                    return
+                if other in view.class_ancestors(range_name):
+                    # The same record, listed under a subclass: the subclass names it.
+                    _merge(data, item)
+                    keyed[key][index] = (range_name, data)
+                    return
+            keyed[key].append((range_name, dict(item)))
 
         for path in sorted(p for p in self.directory.rglob("*") if p.suffix in _SUFFIXES and p.is_file()):
             document = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -182,7 +193,7 @@ class YamlDirectory:
                 for item in document if isinstance(document, list) else [document]:
                     add(target, item)
 
-        for range_name, data in [*merged.values(), *loose]:
+        for range_name, data in [*(entry for entries in keyed.values() for entry in entries), *loose]:
             self._build(range_name, data)
         logger.info("Read %d records from %d files under %s", len(self.records), self.files, self.directory)
 

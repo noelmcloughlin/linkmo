@@ -10,6 +10,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 - **The template is named linkmo.** The repository moved from `noelmcloughlin/linkmo-project-copier` to `noelmcloughlin/linkmo`; GitHub redirects the old address, so a host's recorded `_src_path` keeps working. The README, the security policy and the test project's name follow.
 
+### Fixed
+
+- **Records of unrelated classes may share an identifier.** The YAML source merged every record with one identifier into one, so a Shelter and a Person both called `galway` became one rejected Person and the Shelter was lost. Two records now merge only when one's class is the other's or an ancestor of it.
+
 ## [0.1.0] - 2026-10-11
 
 ### Added
