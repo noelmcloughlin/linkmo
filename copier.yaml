@@ -35,9 +35,11 @@ linkmo_dir:
   type: str
   help: The folder at the host root that will hold the generated project
   default: "{{ project_slug | replace('_', '-') }}-linkmo"
+  # The folder's name is also the generated distribution's name, which must start and
+  # end with a letter or digit (PEP 508).
   validator: >-
-    {% if not (linkmo_dir | regex_search('^[A-Za-z0-9][A-Za-z0-9._-]*$', ignorecase=False)) %}
-    One folder name: letters, digits, '.', '_' or '-', starting with a letter or digit.
+    {% if not (linkmo_dir | regex_search('^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$', ignorecase=False)) %}
+    One folder name: letters, digits, '.', '_' or '-', starting and ending with a letter or digit.
     {% elif linkmo_dir == sidecar_dir %}
     The project cannot share the sidecar's folder.
     {% endif %}

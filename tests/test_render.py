@@ -172,3 +172,14 @@ def test_a_hyphenated_slug_gives_importable_defaults(tmp_path):
     assert recorded["linkmo_dir"] == "my-schema-linkmo" and recorded["command_name"] == "my-schema"
     # The schema's own path keeps the slug as the sidecar spells it.
     assert recorded["schema_path"] == "schema/my-schema.yaml"
+
+
+def test_the_project_folder_name_must_be_a_package_name(tmp_path):
+    host = h.make_host(tmp_path, None, name="named")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        with pytest.raises(ValueError, match="linkmo_dir"):
+            h.render_linkmo(host, {"linkmo_dir": "named-"})
+        h.render_linkmo(host, {"linkmo_dir": "named.api_v2"})
+    assert (host / "named.api_v2" / "pyproject.toml").is_file()
+    assert h.answers(host)["linkmo_dir"] == "named.api_v2"

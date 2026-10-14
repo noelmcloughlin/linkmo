@@ -9,6 +9,7 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 ### Fixed
 
 - **A hyphenated slug renders.** The datamodel module default writes the hyphen as an underscore, so `copier copy --defaults` no longer fails its own validator.
+- **The project folder must end in a letter or digit.** Its name is the generated distribution's name, and a trailing `.`, `_` or `-` is not a valid package name, so `uv sync` refused it.
 
 ## [0.1.1] - 2026-10-14
 
