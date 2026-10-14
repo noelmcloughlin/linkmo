@@ -6,6 +6,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+### Changed
+
+- **The template is named linkmo.** The repository moved from `noelmcloughlin/linkmo-project-copier` to `noelmcloughlin/linkmo`; GitHub redirects the old address, so a host's recorded `_src_path` keeps working. The README, the security policy and the test project's name follow.
+
 ## [0.1.0] - 2026-10-11
 
 ### Added

@@ -1047,7 +1047,7 @@ wheels = [
 ]
 
 [[package]]
-name = "linkmo-project-copier"
+name = "linkmo"
 version = "0.0.0"
 source = { virtual = "." }
 

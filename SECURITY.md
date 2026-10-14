@@ -4,7 +4,7 @@
 
 ## Reporting a vulnerability
 
-Use GitHub's [private vulnerability reporting](https://github.com/noelmcloughlin/linkmo-project-copier/security/advisories/new), not a public issue or a pull request. Say which file is affected, how it is exploitable, and whether it reaches a generated project or only this repository's automation. One person maintains this template: expect a first reply in days, not hours, and no bounty.
+Use GitHub's [private vulnerability reporting](https://github.com/noelmcloughlin/linkmo/security/advisories/new), not a public issue or a pull request. Say which file is affected, how it is exploitable, and whether it reaches a generated project or only this repository's automation. One person maintains this template: expect a first reply in days, not hours, and no bounty.
 
 ## Supported versions
 
