@@ -254,3 +254,18 @@ def test_records_of_unrelated_classes_may_share_an_identifier(pets_project, tmp_
     for scope in ("animal", "person", "shelter"):
         listing = _listing(project, data, scope)
         assert listing["count"] == 1 and listing["validation_errors"] == [], scope
+
+
+def test_a_data_file_may_hold_a_list_of_root_instances(pets_project, tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "batch.yaml").write_text(
+        "- animals:\n    - id: rex\n      type: Dog\n      name: Rex\n      species: dog\n"
+        "  people:\n    - id: aoife\n      name: Aoife\n"
+        "- animals:\n    - id: luna\n      type: Dog\n      name: Luna\n      species: dog\n",
+        encoding="utf-8",
+    )
+    animals = _listing(pets_project, data, "animal")
+    assert sorted(item["id"] for item in animals["items"]) == ["luna", "rex"]
+    assert animals["validation_errors"] == []
+    assert _listing(pets_project, data, "person")["count"] == 1

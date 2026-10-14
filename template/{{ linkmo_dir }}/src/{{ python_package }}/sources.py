@@ -6,8 +6,8 @@ the slot equals the value or, for a multivalued slot, when its list holds the va
 
 ``YamlDirectory`` reads every ``.yaml``, ``.yml`` and ``.json`` file under a directory once.
 A file whose name starts with a class name and a dash, as in ``Person-001.yaml``, holds
-records of that class. Any other file holds an instance of the root class, whose
-collection slots hold the records. Two records that share an identifier are one record when
+records of that class. Any other file holds an instance of the root class, or a list of
+them, whose collection slots hold the records. Two records that share an identifier are one record when
 one's class is the other's or an ancestor of it, such as a record and the mapping rows
 another file adds to it, and they are merged before they are validated: a list gains the
 values it lacks, any other value is replaced. Records of unrelated classes that happen to
@@ -177,20 +177,25 @@ class YamlDirectory:
             if target is None:
                 self.errors["*"].append(f"{path.name}: no class in the file name and no root class")
                 continue
-            if target == root and isinstance(document, dict):
-                for slot in collection_slots(view, root):
-                    value = document.get(slot.name)
-                    if isinstance(value, dict):
-                        # A collection inlined as a dictionary is keyed by identifier.
-                        key_slot = identifier_slot(view, slot.range) or "id"
-                        value = [
-                            {key_slot: key, **(item if isinstance(item, dict) else {})}
-                            for key, item in value.items()
-                        ]
-                    for item in value or ():
-                        add(slot.range, item)
+            documents = document if isinstance(document, list) else [document]
+            if target == root:
+                for instance in documents:
+                    if not isinstance(instance, dict):
+                        self.errors["*"].append(f"{path.name}: expected a mapping of {root}, read {instance!r}")
+                        continue
+                    for slot in collection_slots(view, root):
+                        value = instance.get(slot.name)
+                        if isinstance(value, dict):
+                            # A collection inlined as a dictionary is keyed by identifier.
+                            key_slot = identifier_slot(view, slot.range) or "id"
+                            value = [
+                                {key_slot: key, **(item if isinstance(item, dict) else {})}
+                                for key, item in value.items()
+                            ]
+                        for item in value or ():
+                            add(slot.range, item)
             else:
-                for item in document if isinstance(document, list) else [document]:
+                for item in documents:
                     add(target, item)
 
         for range_name, data in [*(entry for entries in keyed.values() for entry in entries), *loose]:
