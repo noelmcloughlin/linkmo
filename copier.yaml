@@ -19,6 +19,11 @@ sidecar_dir:
   default: "{{ sidecar_answers_file | dirname }}"
   when: false
 
+sidecar_found:
+  type: bool
+  default: "{{ _external_data.sidecar.project_slug is defined }}"
+  when: false
+
 project_slug:
   type: str
   help: The schema's slug, which names its schema file and its datamodel module
@@ -175,8 +180,24 @@ python_package:
 
 env_prefix:
   type: str
+  help: |
+    The prefix of the project's environment variables, as in <PREFIX>_DATA. Choose another
+    when the host already has variables that start with it.
   default: "{{ python_package | upper }}"
-  when: false
+  validator: >-
+    {% if not (env_prefix | regex_search('^[A-Z][A-Z0-9_]*$', ignorecase=False)) %}
+    Capital letters, digits and '_', starting with a letter.
+    {% endif %}
+
+openapi_file:
+  type: str
+  help: Where `just gen-openapi` publishes the API's contract, as a path from the host root
+  default: "{{ linkmo_dir }}/docs/openapi.json"
+
+entities_file:
+  type: str
+  help: Where `just gen-ui-config` writes a web UI's entity list, as a path from the host root
+  default: "{{ linkmo_dir }}/ui/entities.json"
 
 # === Settings ===
 

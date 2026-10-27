@@ -136,7 +136,7 @@ def _shared_options() -> list[click.Option]:
             help=f"Seconds to wait for the server in API mode. Default {DEFAULT_TIMEOUT:g}.",
         ),
         click.Option(["--count", "count"], is_flag=True, help="Print only the number of records."),
-        click.Option(["--pretty", "pretty"], is_flag=True, help="Indent the JSON."),
+        click.Option(["--pretty", "pretty"], is_flag=True, help="Indent the JSON, as on a terminal."),
     ]
 
 
@@ -380,12 +380,15 @@ def call_api_server(target: Target, request: dict[str, Any], run_settings: RunSe
 def call_local_handler(target: Target, request: dict[str, Any], run_settings: RunSettings) -> None:
     """Answer in this process: a class listing through ``query_class``, a hand operation
     through the function its operationId names, with the arguments it accepts."""
+    from fastapi import HTTPException
+
     from .handlers import QueryError, jsonable, query_class
 
     try:
         if target.class_name is not None:
             result = query_class(target.class_name, **request)
         else:
+            settings.add_module_paths()
             module_name, _, function_name = target.operation_id.rpartition(".")
             module = importlib.import_module(f".{module_name or 'hand'}", __package__)
             function = getattr(module, function_name)
@@ -393,6 +396,10 @@ def call_local_handler(target: Target, request: dict[str, Any], run_settings: Ru
             result = jsonable(function(**{k: v for k, v in request.items() if k in accepted}))
     except QueryError as exc:
         display_error("Error", f"[{exc.status}] {exc.detail}")
+        sys.exit(1)
+    except HTTPException as exc:
+        # A hand operation may raise FastAPI's own exception, which the API answers as is.
+        display_error("Error", f"[{exc.status_code}] {exc.detail}")
         sys.exit(1)
     except (FileNotFoundError, LookupError, ValueError, ImportError, AttributeError) as exc:
         display_error("Error", str(exc))

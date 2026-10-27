@@ -208,12 +208,21 @@ generator_args:
 
 def test_a_python_source_answers_with_a_parameter_the_exposure_adds(tmp_path, sidecar_template):
     host = h.make_host(tmp_path, sidecar_template)
-    h.render_linkmo(host, {"data_source": "python", "data_object": "pets_linkmo.pets_source:PetsSource"})
+    h.render_linkmo(
+        host,
+        {
+            "data_source": "python",
+            "data_object": "pets_source:PetsSource",
+            "openapi_file": "docs/openapi.json",
+            "entities_file": "web/entities.json",
+        },
+    )
     project = host / "pets-linkmo"
-    assert 'DATA = _setting("DATA", "pets_linkmo.pets_source:PetsSource")' in (
+    assert 'DATA = _setting("DATA", "pets_source:PetsSource")' in (
         project / "src" / "pets_linkmo" / "settings.py"
     ).read_text(encoding="utf-8")
-    shutil.copy2(h.PETS / "pets_source.py", project / "src" / "pets_linkmo" / "pets_source.py")
+    # The source is a module of the host's own, at the host root.
+    shutil.copy2(h.PETS / "pets_source.py", host / "pets_source.py")
     (project / "exposure.yaml").write_text(SOURCE_EXPOSURE, encoding="utf-8")
 
     def cli(*args: str) -> dict:
@@ -235,9 +244,59 @@ def test_a_python_source_answers_with_a_parameter_the_exposure_adds(tmp_path, si
     )
     assert api.returncode == 0, api.stderr
     assert json.loads(api.stdout) == adopted
-    # The project's own tests pass with the Python source too.
-    result = h.run_project(project, "-m", "pytest", "-q", "-p", "no:cacheprovider")
+    # A hand operation may raise FastAPI's HTTPException, which local mode reports too.
+    with open(project / "src" / "pets_linkmo" / "hand.py", "a", encoding="utf-8") as handle:
+        handle.write(
+            "\n\ndef shelter_of(animal: str) -> dict:\n"
+            "    from fastapi import HTTPException\n\n"
+            "    raise HTTPException(status_code=404, detail=f'{animal} has no shelter on record')\n"
+        )
+    exposure = SOURCE_EXPOSURE + SHELTER_OF
+    (project / "exposure.yaml").write_text(exposure, encoding="utf-8")
+    failed = h.run_project(project, "-m", "pets_linkmo", "shelter-of", "--animal", "rex")
+    assert failed.returncode == 1 and "[404] rex has no shelter on record" in failed.stderr, failed.stderr
+    # The browse build's parameters go with each question to the classes that take them.
+    rows = h.run_project(
+        project,
+        "-c",
+        "import json\nfrom pets_linkmo.sources import rows_by_class\n"
+        "rows = rows_by_class(params={'adopted_by': 'aoife'})\n"
+        "print(json.dumps({name: sorted(r['id'] for r in records) for name, records in rows.items()}))",
+    )
+    assert rows.returncode == 0, rows.stderr
+    assert json.loads(rows.stdout)["Cat"] == ["mittens"]
+    # Published where the answers say, from the host root, the project's own tests pass.
+    for recipe in ("gen-openapi", "gen-ui-config"):
+        result = h.run_just(project, recipe)
+        assert result.returncode == 0, result.stderr
+    assert (host / "docs" / "openapi.json").is_file() and (host / "web" / "entities.json").is_file()
+    result = h.run_project(project, "-m", "pytest", "-q", "-rs", "-p", "no:cacheprovider")
     assert result.returncode == 0, result.stdout[-3000:]
+    assert "just gen-openapi" not in result.stdout and "just gen-ui-config" not in result.stdout, result.stdout
+    # Marked as a filter, the added parameter only chooses records, so the answer stays one.
+    (project / "exposure.yaml").write_text(
+        exposure.replace("            name: adopted_by\n", "            name: adopted_by\n            x-linkmo-filter: true\n"),
+        encoding="utf-8",
+    )
+    assert cli("animal", "biscuit", "--adopted_by", "aoife")["item"]["name"] == "Biscuit"
+    assert cli("animal", "rex", "--adopted_by", "aoife") == {"item": None}
+    assert cli("animal", "--adopted_by", "aoife") == adopted
+
+
+SHELTER_OF = """\
+      paths:
+        /shelter-of:
+          get:
+            summary: The shelter that houses an animal
+            operationId: hand.shelter_of
+            parameters:
+              - in: query
+                name: animal
+                schema:
+                  type: string
+                required: true
+"""
+
 
 def _run_with_data(project: Path, data_dir: Path, *args: str) -> subprocess.CompletedProcess:
     """Run the pets command line against a data directory other than the host's."""
