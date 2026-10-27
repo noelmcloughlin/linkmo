@@ -6,6 +6,8 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
 ### Added
 
 - **The `env_prefix` question.** A host whose own variables start with the package's name in capitals chooses another prefix for the project's settings.
