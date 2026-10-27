@@ -23,6 +23,7 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 - **The host root is on the path, last.** A Python data source and `hand.py` can import the host's own modules.
 - **Local mode reports a hand operation's `HTTPException`** as the API does, in place of a traceback.
 - **The README names a sidecar only when one was found.**
+- **`just install` keeps what else the environment holds**, so it no longer uninstalls a workspace host's packages.
 
 ## [0.2.0] - 2026-10-27
 
