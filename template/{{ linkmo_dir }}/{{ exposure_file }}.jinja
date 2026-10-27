@@ -34,6 +34,9 @@ generator_args:
       info:
         title: {{ linkmo_dir }} API
         version: 0.1.0
+      # Each path binds a function in hand.py through its operationId. The command line
+      # makes its query parameters options, except one marked `x-linkmo-argument: true`,
+      # which it takes as the command's argument.
       paths:
         /summary:
           get:

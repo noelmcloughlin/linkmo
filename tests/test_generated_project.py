@@ -253,7 +253,7 @@ def test_a_python_source_answers_with_a_parameter_the_exposure_adds(tmp_path, si
         )
     exposure = SOURCE_EXPOSURE + SHELTER_OF
     (project / "exposure.yaml").write_text(exposure, encoding="utf-8")
-    failed = h.run_project(project, "-m", "pets_linkmo", "shelter-of", "--animal", "rex")
+    failed = h.run_project(project, "-m", "pets_linkmo", "shelter-of", "rex")
     assert failed.returncode == 1 and "[404] rex has no shelter on record" in failed.stderr, failed.stderr
     # The browse build's parameters go with each question to the classes that take them.
     rows = h.run_project(
@@ -295,6 +295,7 @@ SHELTER_OF = """\
                 schema:
                   type: string
                 required: true
+                x-linkmo-argument: true
 """
 
 

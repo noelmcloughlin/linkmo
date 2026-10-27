@@ -222,7 +222,9 @@ def _overlay_parameter(definition: dict[str, Any]) -> Parameter:
 
 def _hand_command(path: str, methods: dict[str, Any]) -> click.Command | None:
     """The command for one hand operation: the GET when there is one, else the first
-    method. Its options are the operation's query parameters and its body's properties."""
+    method. Its options are the operation's query parameters and its body's properties.
+    The first query parameter marked ``x-linkmo-argument: true`` is its argument instead,
+    as the identifier is a class command's."""
     method = "get" if "get" in methods else next(iter(methods), None)
     if method is None:
         return None
@@ -234,7 +236,12 @@ def _hand_command(path: str, methods: dict[str, Any]) -> click.Command | None:
             continue
         parameter = _overlay_parameter(definition)
         names[parameter.python_name] = parameter.name
-        params.append(_option(parameter, definition.get("required", False)))
+        required = definition.get("required", False)
+        if definition.get("x-linkmo-argument") and not any(isinstance(p, click.Argument) for p in params):
+            kind = {"integer": int, "number": float}.get(parameter.kind, str)
+            params.insert(0, click.Argument([parameter.python_name], type=kind, required=required))
+        else:
+            params.append(_option(parameter, required))
     body = ((operation.get("requestBody") or {}).get("content") or {}).get("application/json") or {}
     for name, schema in ((body.get("schema") or {}).get("properties") or {}).items():
         parameter = Parameter(

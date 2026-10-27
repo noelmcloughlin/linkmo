@@ -89,7 +89,7 @@ Defaults are read from the sidecar's answers where they exist.
 
 The template creates these once and never overwrites them:
 
-- `exposure.yaml`, which names the exposed classes, their paths and labels, adds parameters a Python source understands, and binds hand-written operations to paths. An added parameter asks a question of its own, so with the identifier the answer is a listing, unless its definition says `x-linkmo-filter: true`;
+- `exposure.yaml`, which names the exposed classes, their paths and labels, adds parameters a Python source understands, and binds hand-written operations to paths. An added parameter asks a question of its own, so with the identifier the answer is a listing, unless its definition says `x-linkmo-filter: true`. A hand operation's parameter marked `x-linkmo-argument: true` is its command's argument;
 
 - `src/<package>/hand.py`, the hand-written operations, starting with `summary`;
 
