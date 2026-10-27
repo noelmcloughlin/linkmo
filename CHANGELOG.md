@@ -10,6 +10,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 - **A `pkg:` path's package is a dependency.** The `requirements` question, asked when the schema or data path starts with `pkg:`, guesses the distribution from the package's name and adds it to the generated dependencies. Answer `[]` to use an environment that has it through `LINKMO_PYTHON`, whose recipes now put `src/` on the path.
 
+### Fixed
+
+- **Default labels keep acronyms and leave mass nouns alone.** A word that the class's title, aliases or description writes only in capitals keeps them, so `AiTask` is "AI Tasks", and `Documentation` takes no plural.
+
 ## [0.1.3] - 2026-10-27
 
 ### Added
