@@ -47,6 +47,8 @@ Defaults are read from the sidecar's answers where they exist.
 
 - `data_object` for `python`: `module:attribute`. A class or function found there is called once.
 
+- `requirements` when a path starts with `pkg:`: the package's name with dashes, such as `[ai-atlas-nexus]`. The list joins the project's dependencies. Answer `[]` to run the project on an environment that has the package already, with `LINKMO_PYTHON` set to its Python.
+
 - `cli_framework`: `click`, the only choice in this version.
 
 - `api`: `fastapi`, the only choice in this version.

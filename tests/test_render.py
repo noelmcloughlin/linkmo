@@ -132,6 +132,39 @@ def test_the_pyproject_leaves_linkml_out_and_names_the_command(pets_host):
     names = [dep.split(">")[0].split("<")[0].split("=")[0].strip() for dep in pyproject["project"]["dependencies"]]
     assert "linkml-runtime" in names and "linkml" not in names and "chardet" not in names
     assert pyproject["project"]["scripts"] == {"pets": "pets_linkmo.cli:main"}
+    # Without a pkg: path, the requirements question is not asked.
+    assert "requirements" not in h.answers(host)
+
+
+def _render_packaged(tmp_path, name: str, data: dict) -> tuple:
+    import tomllib
+
+    host = h.make_host(tmp_path, None, name=name)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        h.render_linkmo(host, {"schema_path": "pkg:zoo_data/schema/zoo.yaml", "data_path": "pkg:zoo_data/records"} | data)
+    project = host / f"{name}-linkmo"
+    pyproject = tomllib.loads((project / "pyproject.toml").read_text(encoding="utf-8"))
+    return h.answers(host), pyproject["project"]["dependencies"], (project / "README.md").read_text(encoding="utf-8")
+
+
+def test_a_pkg_path_makes_its_package_a_dependency(tmp_path):
+    recorded, dependencies, readme = _render_packaged(tmp_path, "packaged", {"project_slug": "packaged"})
+    assert recorded["requirements"] == ["zoo-data"]
+    assert dependencies[-1] == "zoo-data" and dependencies.count("zoo-data") == 1
+    assert "which `just install` installs as `zoo-data`" in readme and "LINKMO_PYTHON" in readme
+
+
+def test_the_requirements_answer_replaces_the_guess(tmp_path):
+    recorded, dependencies, _ = _render_packaged(
+        tmp_path / "pinned", "pinned", {"project_slug": "pinned", "requirements": ["zoo-records>=2,<3"]}
+    )
+    assert recorded["requirements"] == ["zoo-records>=2,<3"] and dependencies[-1] == "zoo-records>=2,<3"
+    recorded, dependencies, readme = _render_packaged(tmp_path / "none", "none", {"project_slug": "none", "requirements": []})
+    assert recorded["requirements"] == [] and not any(d.startswith("zoo") for d in dependencies)
+    assert "set `LINKMO_PYTHON`" in readme and "just install` installs as" not in readme
+    with pytest.raises(ValueError, match="requirements"):
+        _render_packaged(tmp_path / "string", "string", {"project_slug": "string", "requirements": "zoo-records"})
 
 
 def test_project_owned_files_survive_a_second_copy(tmp_path, sidecar_template):

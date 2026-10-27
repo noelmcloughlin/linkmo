@@ -112,6 +112,33 @@ data_object:
     Give the object as module:attribute, such as my_package.data:store.
     {% endif %}
 
+requirements:
+  type: yaml
+  help: |
+    Which distributions install the packages that the pkg: paths read? Give a YAML list
+    of requirements, such as [ai-atlas-nexus>=1.2.5]. They join the project's
+    dependencies. Give [] when the project runs on another environment that has them,
+    through LINKMO_PYTHON.
+  # The default guesses each distribution from its package's name, which holds for most
+  # packages. The question is asked only when a path starts with pkg:.
+  default: >-
+    {%- set ns = namespace(names=[]) -%}
+    {%- for value in [schema_path, data_path | default('') if data_source == 'yaml' else ''] -%}
+    {%- if value.startswith('pkg:') -%}
+    {%- set name = value[4:].split('/')[0] | replace('_', '-') -%}
+    {%- if name and name not in ns.names -%}{%- set ns.names = ns.names + [name] -%}{%- endif -%}
+    {%- endif -%}
+    {%- endfor -%}
+    {{ ns.names | tojson }}
+  when: "{{ schema_path.startswith('pkg:') or (data_source == 'yaml' and data_path.startswith('pkg:')) }}"
+  validator: >-
+    {% if requirements is string or requirements is mapping or requirements is not sequence %}
+    A YAML list of requirements, such as [ai-atlas-nexus>=1.2.5], or [] for none.
+    {% else %}{% for requirement in requirements %}
+    {% if requirement is not string or not requirement | trim or '"' in requirement or '\\' in requirement %}
+    Each requirement is one line of text, such as ai-atlas-nexus>=1.2.5, without quotes.
+    {% endif %}{% endfor %}{% endif %}
+
 cli_framework:
   type: str
   help: Which command-line framework? Only click exists in this version.
