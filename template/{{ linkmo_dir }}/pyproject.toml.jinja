@@ -20,6 +20,12 @@ dependencies = [
     "linkml-runtime>=1.10,<2",
     "pydantic>=2.11,<3",
     "pyyaml>=6.0",
+{%- if requirements %}
+    # The packages the pkg: paths read, from the requirements answer.
+{%- for requirement in requirements %}
+    "{{ requirement | trim }}",
+{%- endfor %}
+{%- endif %}
 ]
 
 [project.scripts]

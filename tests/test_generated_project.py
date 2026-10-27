@@ -165,6 +165,23 @@ def test_the_derived_exposure_is_the_root_class_collections(tmp_path, sidecar_te
     assert result.returncode == 0, result.stdout[-3000:]
 
 
+def test_a_default_label_keeps_capitals_and_leaves_a_mass_noun_alone(pets_project):
+    cases = {
+        ("AiTask", "A task, such as summarization, performed by an AI."): "AI Tasks",
+        # A word the text also writes in lower case is not an acronym.
+        ("NoteLog", "NOTE: a log of each note."): "Note Logs",
+        ("LLMIntrinsic", ""): "LLM Intrinsics",
+        ("RiskTaxonomy", ""): "Risk Taxonomies",
+        ("Documentation", "Documented information."): "Documentation",
+    }
+    script = "from pets_linkmo.exposure import default_label\n" + "".join(
+        f"print(default_label({name!r}, {text!r}))\n" for name, text in cases
+    )
+    result = h.run_project(pets_project, "-c", script)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == list(cases.values())
+
+
 SOURCE_EXPOSURE = """\
 generator_args:
   openapi:
