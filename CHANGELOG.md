@@ -12,7 +12,7 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 - **The `openapi_file` and `entities_file` questions.** `gen-openapi`, `gen-ui-config` and the published-file tests use these paths, so a host can publish outside the project folder.
 - **`x-linkmo-filter: true` on an added parameter.** Such a parameter only chooses records, so with the identifier the answer stays one record.
 - **`x-linkmo-argument: true` on a hand operation's query parameter.** The command line takes it as the command's argument rather than an option.
-- **`build-browse --param name=value`.** The data source is asked with that parameter, and `--data-dir` keeps the database apart; `browse` takes the folder to serve.
+- **`build-browse --param name=value`.** The data source is asked with that parameter, and `--data-dir` writes the database to another folder. `browse` takes the folder to serve.
 
 ### Changed
 
