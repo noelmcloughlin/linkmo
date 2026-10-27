@@ -45,7 +45,7 @@ Defaults are read from the sidecar's answers where they exist.
 
 - `data_path` for `yaml`: `data`, from the host root, or `pkg:<package>/<path>`.
 
-- `data_object` for `python`: `module:attribute`. A class or function found there is called once.
+- `data_object` for `python`: `module:attribute`. A class or function found there is called once. The host root is on the path last, so the object may live in the host's own code.
 
 - `requirements` when a path starts with `pkg:`: the package's name with dashes, such as `[ai-atlas-nexus]`. The list joins the project's dependencies. Answer `[]` to run the project on an environment that has the package already, with `LINKMO_PYTHON` set to its Python.
 
@@ -57,11 +57,15 @@ Defaults are read from the sidecar's answers where they exist.
 
 - `python_package`: `<slug>_linkmo`.
 
+- `env_prefix`: the package's name in capitals, which starts each setting's environment variable, as in `PETS_LINKMO_DATA`. Choose another when the host already has variables that start with it.
+
+- `openapi_file` and `entities_file`: `<slug>-linkmo/docs/openapi.json` and `<slug>-linkmo/ui/entities.json`, from the host root, where `gen-openapi` and `gen-ui-config` write and the tests look.
+
 ## What you get
 
 - One command and one endpoint per exposed class, with one option and one query parameter per slot. An enum slot offers its values. A boolean slot is `--name` or `--no-name`. The identifier fetches one record.
 
-- The same JSON through both: `{"items", "count", "validation_errors"}` for a listing, `{"item"}` for one record. The command line reads the data in the process, or asks the server with `--mode api`.
+- The same JSON through both: `{"items", "count", "validation_errors"}` for a listing, `{"item"}` for one record. The command line reads the data in the process, or asks the server with `--mode api`, and indents the JSON on a terminal.
 
 - FastAPI's OpenAPI 3.1 contract, with the datamodel's model of each class, served at `/openapi.json`, `/docs`, `/redoc` and `/scalar`.
 
@@ -73,7 +77,7 @@ Defaults are read from the sidecar's answers where they exist.
 
   - `validate-sssom` (each `mappings/*.sssom.tsv`);
 
-  - `build-browse` and `browse` (SQLite tables from gen-sqltables, served by Datasette);
+  - `build-browse` and `browse` (SQLite tables from gen-sqltables, served by Datasette; `--param` passes an added parameter to each question);
 
   - `gen-examples` and `gen-doc` (class pages with an example from the data);
 
@@ -85,7 +89,7 @@ Defaults are read from the sidecar's answers where they exist.
 
 The template creates these once and never overwrites them:
 
-- `exposure.yaml`, which names the exposed classes, their paths and labels, adds parameters a Python source understands, and binds hand-written operations to paths;
+- `exposure.yaml`, which names the exposed classes, their paths and labels, adds parameters a Python source understands, and binds hand-written operations to paths. An added parameter asks a question of its own, so with the identifier the answer is a listing, unless its definition says `x-linkmo-filter: true`. A hand operation's parameter marked `x-linkmo-argument: true` is its command's argument;
 
 - `src/<package>/hand.py`, the hand-written operations, starting with `summary`;
 

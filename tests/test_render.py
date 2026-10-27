@@ -61,6 +61,9 @@ def test_without_a_sidecar_the_defaults_fall_back_to_the_host(tmp_path):
     assert recorded["project_slug"] == "my_host"
     assert recorded["schema_path"] == "schema/my_host.yaml"
     assert (host / "my-host-linkmo" / "justfile").is_file()
+    # The README names no sidecar the host lacks.
+    readme = (host / "my-host-linkmo" / "README.md").read_text(encoding="utf-8")
+    assert "sidecar" not in readme
 
 
 def test_copying_into_the_current_folder_names_the_slug_after_it(tmp_path, monkeypatch):
@@ -118,6 +121,9 @@ def test_the_project_files(pets_host):
     settings = (package / "settings.py").read_text(encoding="utf-8")
     assert 'ENV_PREFIX = "PETS_LINKMO"' in settings
     assert '"SCHEMA", ".linkml/src/pets/schema/pets.yaml"' in settings
+    assert '"OPENAPI", "pets-linkmo/docs/openapi.json"' in settings
+    assert '"ENTITIES", "pets-linkmo/ui/entities.json"' in settings
+    assert "beside the LinkML sidecar in `.linkml/`" in (project / "README.md").read_text(encoding="utf-8")
     # Nothing was written outside the project folder but the answers file.
     tracked = set(h.git(host, "ls-files").split())
     written = set(h.git(host, "ls-files", "--others", "--exclude-standard").split()) - tracked
@@ -216,3 +222,26 @@ def test_the_project_folder_name_must_be_a_package_name(tmp_path):
         h.render_linkmo(host, {"linkmo_dir": "named.api_v2"})
     assert (host / "named.api_v2" / "pyproject.toml").is_file()
     assert h.answers(host)["linkmo_dir"] == "named.api_v2"
+
+
+def test_a_host_chooses_the_prefix_and_where_the_published_files_go(tmp_path):
+    host = h.make_host(tmp_path, None)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        h.render_linkmo(
+            host,
+            {"env_prefix": "PETS_API", "openapi_file": "docs/openapi.json", "entities_file": "web/src/entities.json"},
+        )
+    settings = (host / "host-linkmo" / "src" / "host_linkmo" / "settings.py").read_text(encoding="utf-8")
+    assert 'ENV_PREFIX = "PETS_API"' in settings
+    assert '"OPENAPI", "docs/openapi.json"' in settings
+    assert '"ENTITIES", "web/src/entities.json"' in settings
+    assert h.answers(host)["env_prefix"] == "PETS_API"
+
+
+def test_the_prefix_must_be_an_environment_variable_name(tmp_path):
+    host = h.make_host(tmp_path, None)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        with pytest.raises(ValueError, match="env_prefix"):
+            h.render_linkmo(host, {"env_prefix": "pets-api"})

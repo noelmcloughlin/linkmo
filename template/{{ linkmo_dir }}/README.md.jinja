@@ -2,7 +2,7 @@
 
 A command line and an HTTP API over the `{{ project_slug }}` LinkML schema and its data. Both are built from the schema when they start: one command and one endpoint per exposed class, with one filter per slot of the class. Nothing is generated into this folder ahead of time, so a slot added to the schema is a filter at the next start.
 
-The linkmo copier template made this project beside the LinkML sidecar in `{{ sidecar_dir or '.' }}/`. It reads the schema from `{{ schema_path }}` and the records from {% if data_source == 'yaml' %}the YAML files under `{{ data_path }}`{% else %}`{{ data_object }}`{% endif %}.
+The linkmo copier template made this project{% if sidecar_found %} beside the LinkML sidecar in `{{ sidecar_dir or '.' }}/`{% endif %}. It reads the schema from `{{ schema_path }}` and the records from {% if data_source == 'yaml' %}the YAML files under `{{ data_path }}`{% else %}`{{ data_object }}`{% endif %}.
 
 ## Use it
 
@@ -15,7 +15,7 @@ just --justfile {{ linkmo_dir }}/justfile serve            # the API on http://l
 just --justfile {{ linkmo_dir }}/justfile test
 ```
 
-Inside this folder, plain `just <recipe>` works, and after `just install` so does `uv run {{ command_name }} --help`. `just --list` shows the rest: the published contract, a web UI's entity list, the SSSOM check, the Datasette browse database and the schema's pages with examples.
+Inside this folder, plain `just <recipe>` works, and after `just install` so does `uv run {{ command_name }} --help`. `just --list` shows the rest: the published contract in `{{ openapi_file }}`, a web UI's entity list in `{{ entities_file }}`, the SSSOM check, the Datasette browse database and the schema's pages with examples.
 {% if schema_path.startswith('pkg:') or (data_source == 'yaml' and data_path.startswith('pkg:')) %}
 A `pkg:` path is read from an installed package{% if requirements %}, which `just install` installs as `{{ requirements | join('`, `') }}`{% endif %}. To use an environment that already has the package, set `LINKMO_PYTHON` to its Python, and the recipes put `src/` on its path.{% if requirements %} Answer `requirements` with `[]` to leave the package out of this project's dependencies.{% endif %}
 {% endif %}
@@ -30,4 +30,4 @@ The template created these files once and never overwrites them:
 - `tests/expected_counts.yaml` lists the questions your data must answer and how many records each returns.
 - `project.justfile` holds your own recipes.
 
-Everything else follows the template. Run `copier update -a .copier-answers.linkmo.yml --trust` from the host root to bring in a new version. It updates this template on its own and does not touch the sidecar.
+Everything else follows the template. Run `copier update -a .copier-answers.linkmo.yml --trust` from the host root to bring in a new version. It updates this template on its own{% if sidecar_found %} and does not touch the sidecar{% endif %}.

@@ -6,6 +6,25 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+### Added
+
+- **The `env_prefix` question.** A host whose own variables start with the package's name in capitals chooses another prefix for the project's settings.
+- **The `openapi_file` and `entities_file` questions.** `gen-openapi`, `gen-ui-config` and the published-file tests use these paths, so a host can publish outside the project folder.
+- **`x-linkmo-filter: true` on an added parameter.** Such a parameter only chooses records, so with the identifier the answer stays one record.
+- **`x-linkmo-argument: true` on a hand operation's query parameter.** The command line takes it as the command's argument rather than an option.
+- **`build-browse --param name=value`.** The data source is asked with that parameter, and `--data-dir` writes the database to another folder. `browse` takes the folder to serve.
+
+### Changed
+
+- **JSON is indented on a terminal**, and stays one line in a pipe.
+
+### Fixed
+
+- **The host root is on the path, last.** A Python data source and `hand.py` can import the host's own modules.
+- **Local mode reports a hand operation's `HTTPException`** as the API does, in place of a traceback.
+- **The README names a sidecar only when one was found.**
+- **`just install` keeps what else the environment holds**, so it no longer uninstalls a workspace host's packages.
+
 ## [0.2.0] - 2026-10-27
 
 ### Added

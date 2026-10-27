@@ -1,5 +1,7 @@
 """A Python data source for the pets fixture: the records as plain dicts, and one question
-of its own, adopted_by, which the exposure file adds to the Animal listing."""
+of its own, adopted_by, which the exposure file adds to the Animal listing.
+
+It sits at the host root, beside data/, as a module of the host's own would."""
 
 from __future__ import annotations
 
@@ -20,7 +22,7 @@ def _matches(record: dict[str, Any], name: str, value: Any) -> bool:
 
 class PetsSource:
     def __init__(self) -> None:
-        folder = Path(__file__).resolve().parents[3] / "data"
+        folder = Path(__file__).resolve().parent / "data"
         self.data = yaml.safe_load((folder / "Registry-001.yaml").read_text(encoding="utf-8"))
 
     def query(self, class_name: str, *, adopted_by: str | None = None, **filters: Any) -> list[dict[str, Any]]:

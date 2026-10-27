@@ -23,7 +23,10 @@ generator_args:
       #     label: People
       #
       # `parameters` adds overlay parameters beside the slots, on every class here or
-      # on one class in its own entry. Only a Python data source understands them.
+      # on one class in its own entry. Only a Python data source understands them. With
+      # the identifier, an added parameter asks a question of its own and the answer is
+      # a listing, unless its definition says `x-linkmo-filter: true`: then it only
+      # chooses records, as a slot does, and the answer stays one record.
       parameters: []
     exclude:
       classes: []
@@ -31,6 +34,9 @@ generator_args:
       info:
         title: {{ linkmo_dir }} API
         version: 0.1.0
+      # Each path binds a function in hand.py through its operationId. The command line
+      # makes its query parameters options, except one marked `x-linkmo-argument: true`,
+      # which it takes as the command's argument.
       paths:
         /summary:
           get:
