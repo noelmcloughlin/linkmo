@@ -10,6 +10,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 - **A link check.** `links.yaml` runs lychee over the Markdown on each pull request, each push to main and weekly, handling github.com as knowledge-trust-ladder does.
 
+### Security
+
+- **The test lock pins certifi 2026.10.23.** Older bundles trust an emSign root whose intermediate keys were compromised ([GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2)); a generated project resolves its own certifi.
+
 ## [0.1.2] - 2026-10-14
 
 ### Fixed
