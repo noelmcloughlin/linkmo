@@ -1,5 +1,9 @@
 # linkmo
 
+[![Test template](https://github.com/noelmcloughlin/linkmo/actions/workflows/test.yaml/badge.svg)](https://github.com/noelmcloughlin/linkmo/actions/workflows/test.yaml)
+[![Licence](https://img.shields.io/github/license/noelmcloughlin/linkmo?label=licence)](LICENSE)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/noelmcloughlin/linkmo/badge)](https://scorecard.dev/viewer/?uri=github.com/noelmcloughlin/linkmo)
+
 linkmo is a [copier](https://copier.readthedocs.io) template that turns a LinkML schema and its data into a project with a command line, an HTTP API, a Datasette browse database, schema pages with examples, and tests. The command line and the API are built from the schema each time they start, so a slot added to the schema is a filter at the next start.
 
 It sits beside [linkml-project-copier](https://github.com/linkml/linkml-project-copier) in a host project. The `.linkml/` sidecar owns the schema. This template owns what serves the schema and its data. It keeps that in one folder at the host root, and writes nothing under `.linkml/`.
