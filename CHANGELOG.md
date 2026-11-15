@@ -9,6 +9,7 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 ### Added
 
 - **`scorecard.yml` publishes this repository's OpenSSF Scorecard, and the README shows its badges.**
+- **`codeql.yml` scans the Python, the JavaScript and the workflows with CodeQL.**
 
 ### Changed
 
