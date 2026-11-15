@@ -6,6 +6,15 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+### Added
+
+- **`scorecard.yml` publishes this repository's OpenSSF Scorecard, and the README shows its badges.**
+- **`codeql.yml` scans the Python, the JavaScript and the workflows with CodeQL.**
+
+### Changed
+
+- **The release job installs semantic-release with `npm ci` from `.github/release/package-lock.json`**, which pins every package it pulls in by hash.
+
 ## [0.3.0] - 2026-10-27
 
 ### Added
