@@ -60,11 +60,11 @@ jobs:
         with:
           node-version: 24
 
-      # .github/release/package-lock.json pins the release tools and every
+      # .release/package-lock.json pins the release tools and every
       # package they pull in, and Dependabot keeps it current. They are not a
       # dependency of the project.
       - name: Install semantic-release from its lockfile
-        run: npm ci --prefix .github/release --no-audit --no-fund --ignore-scripts
+        run: npm ci --prefix .release --no-audit --no-fund --ignore-scripts
 
       # Would these commits release? The types are .releaserc.json's: the
       # Conventional Commits preset's feat/fix plus this repository's
@@ -132,7 +132,7 @@ jobs:
       - name: Preview the next release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: .github/release/node_modules/.bin/semantic-release --dry-run
+        run: .release/node_modules/.bin/semantic-release --dry-run
 
   release:
     if: github.event_name == 'push'
@@ -161,7 +161,7 @@ jobs:
           node-version: 24
 
       - name: Install semantic-release from its lockfile
-        run: npm ci --prefix .github/release --no-audit --no-fund --ignore-scripts
+        run: npm ci --prefix .release --no-audit --no-fund --ignore-scripts
 
       # The same guard as `plan`'s, for a push that did not come through a
       # pull request.
@@ -179,4 +179,4 @@ jobs:
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        run: .github/release/node_modules/.bin/semantic-release
+        run: .release/node_modules/.bin/semantic-release

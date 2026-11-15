@@ -14,6 +14,7 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 ### Changed
 
 - **The release job installs semantic-release with `npm ci` from `.github/release/package-lock.json`**, which pins every package it pulls in by hash.
+- **The release tools are in `.release/`**, outside `.github/`, where Dependabot's pull requests for them were refused.
 
 ## [0.3.0] - 2026-10-27
 
