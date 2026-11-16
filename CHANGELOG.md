@@ -6,6 +6,10 @@ A version is a git tag, which copier records in each host's `.copier-answers.lin
 
 ## [Unreleased]
 
+### Fixed
+
+- **Each GitHub release carries its changelog section as its body**: semantic-release asks for the notes again after the changelog commit, and `changelog-release.mjs notes` now answers with the promoted section instead of the empty Unreleased one.
+
 ### Added
 
 - **`scorecard.yml` publishes this repository's OpenSSF Scorecard, and the README shows its badges.**
